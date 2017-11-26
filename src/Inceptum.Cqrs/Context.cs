@@ -108,8 +108,7 @@ namespace Inceptum.Cqrs
         public EventsPublisher EventsPublisher { get; private set; }
         internal CommandDispatcher CommandDispatcher { get; private set; }
         internal EventDispatcher EventDispatcher { get; private set; }
-        internal List<IProcess> Processes { get; private set; }
-        internal IEventStoreAdapter EventStore { get; set; }
+        internal List<IProcess> Processes { get; private set; }        
         internal long FailedCommandRetryDelay { get; set; }
 
         public IRouteMap Routes
@@ -123,49 +122,12 @@ namespace Inceptum.Cqrs
         {
             m_CqrsEngine.SendCommand(command, Name, remoteBoundedContext, priority);
         }
-
-        public void ReplayEvents(string remoteBoundedContext, DateTime @from, Guid? aggregateId, params Type[] types)
-        {
-            m_CqrsEngine.ReplayEvents(Name, remoteBoundedContext, @from, aggregateId, types);
-        }
-
-        public void ReplayEvents(string remoteBoundedContext, DateTime @from, params Type[] types)
-        {
-            m_CqrsEngine.ReplayEvents(Name, remoteBoundedContext, @from, null, types);
-        }
-
-        public void ReplayEvents(string remoteBoundedContext, DateTime @from, Action<long> callback, params Type[] types)
-        {
-            m_CqrsEngine.ReplayEvents(Name, remoteBoundedContext, @from, null, callback, types);
-        }
-
-        public void ReplayEvents(string boundedContext, string remoteBoundedContext, DateTime @from, params Type[] types)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ReplayEvents(string boundedContext, string remoteBoundedContext, DateTime @from, Guid? aggregateId, Action<long> callback, params Type[] types)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ReplayEvents(string boundedContext, string remoteBoundedContext, DateTime @from, Action<long> callback, params Type[] types)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ReplayEvents(string boundedContext, string remoteBoundedContext, DateTime @from, Action<long> callback, int batchSize, params Type[] types)
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public void Dispose()
         {
             CommandDispatcher.Dispose();
             EventDispatcher.Dispose();
         }
-
-
 
         internal bool GetTempDestination(string transportId, Func<Destination> generate, out Destination destination)
         {

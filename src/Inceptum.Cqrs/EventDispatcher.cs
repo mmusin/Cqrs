@@ -133,8 +133,7 @@ namespace Inceptum.Cqrs
     {
         readonly Dictionary<EventOrigin, List<Tuple<Func<object[],object, CommandHandlingResult[]>,BatchManager>>> m_Handlers = new Dictionary<EventOrigin, List<Tuple<Func<object[],object, CommandHandlingResult[]>, BatchManager>>>();
         private readonly string m_BoundedContext;
-        internal static long m_FailedEventRetryDelay = 60000;
-        readonly Dictionary<Guid, Replay> m_Replays = new Dictionary<Guid, Replay>();
+        internal static long m_FailedEventRetryDelay = 60000;        
         readonly Logger m_Logger = LogManager.GetCurrentClassLogger();
         readonly ManualResetEvent m_Stop=new ManualResetEvent(false);
         private readonly Thread m_ApplyBatchesThread;
@@ -395,100 +394,7 @@ namespace Inceptum.Cqrs
                 batchManager.Handle(handlers, events,origin);
             }
         }
-
-
-
-        public void ProcessReplayedEvent(object @event, AcknowledgeDelegate acknowledge, string remoteBoundedContext,
-          Dictionary<string, string> headers)
-        {
-            Replay replay=null;
-
-            if (headers.ContainsKey("CommandId"))
-            {
-                Guid commandId;
-                if(Guid.TryParse(headers["CommandId"],out commandId))
-                    replay = findReplay(commandId);
-            }
-            else
-            {
-                m_Logger.Warn("Bounded context '{0}' uses obsolete Inceptum.Cqrs version. Callback would be never invoked.",remoteBoundedContext);
-            }
-
-            var replayFinishedEvent = @event as ReplayFinishedEvent;
-            if (replayFinishedEvent != null )
-            {
-                if (replay == null)
-                {
-                    acknowledge(0, true);
-                    return;
-                }
-
-                lock (replay)
-                {
-                    if (!replay.ReportReplayFinishedIfRequired(m_Logger,false, acknowledge, replayFinishedEvent))
-                        return;
-
-                    lock (m_Replays)
-                    {
-                        m_Replays.Remove(replay.Id);
-                    }
-                }
-            }
-            else if (replay != null)
-            {
-                lock (replay)
-                {
-
-                    Dispatch(remoteBoundedContext, new []
-                    {
-                        Tuple.Create<object,AcknowledgeDelegate>(@event, (delay, doAcknowledge) =>
-                        {
-                            acknowledge(delay, doAcknowledge);
-
-                            if (!doAcknowledge || !replay.ReportReplayFinishedIfRequired(m_Logger,true))
-                                return;
-
-                            lock (m_Replays)
-                            {
-                                m_Replays.Remove(replay.Id);
-                            }
-                        })
-                    });
- 
-                }
-            }
-            else
-            {
-                    Dispatch(remoteBoundedContext, new[] {Tuple.Create(@event, acknowledge)});
-            }
-             
-        }
-
-        private Replay findReplay(Guid replayId)
-        {
-            Replay replay;
-            lock (m_Replays)
-            {
-                if (!m_Replays.TryGetValue(replayId, out replay))
-                    throw new InvalidOperationException(string.Format("Replay with id {0} is not found", replayId));
-                if (replay == null)
-                    throw new InvalidOperationException(string.Format("Replay with id {0} is null", replayId));
-            }
-            return replay;
-        }
-
-        public void RegisterReplay(Guid id, Action<long> callback)
-        {
-            lock (m_Replays)
-            {
-                if (m_Replays.ContainsKey(id))
-                    throw new InvalidOperationException(string.Format("Replay with id {0} is already in pogress", id));
-                var replay = new Replay(id, callback);
-                m_Replays[id] = replay;
-            }
-
-        }
-
+        
         public void Dispose()
         {
             if (m_ApplyBatchesThread.ThreadState == ThreadState.Unstarted) 

@@ -1,5 +1,4 @@
 ﻿using System;
-using CommonDomain.Persistence;
 
 namespace Inceptum.Cqrs.Configuration.BoundedContext
 {
@@ -17,17 +16,10 @@ namespace Inceptum.Cqrs.Configuration.BoundedContext
         public override void Process(Context context, CqrsEngine cqrsEngine)
         {
             foreach (var handler in ResolvedDependencies)
-            {
-                var repository = context.EventStore==null?null:context.EventStore.Repository;
-                context.CommandDispatcher.Wire(handler,
-                                                      new OptionalParameter<IEventPublisher>(context.EventsPublisher),
-                                                      new FactoryParameter<IRepository>(repository) 
-                    );
+            {                
+                context.CommandDispatcher.Wire(handler, new OptionalParameter<IEventPublisher>(context.EventsPublisher));
             }
         }
 
-    } 
-    
-    
-    
+    }        
 }

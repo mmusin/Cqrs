@@ -18,28 +18,6 @@ namespace Inceptum.Cqrs.Configuration
             route = route ?? descriptor.Route;
             IRegistrationWrapper<IBoundedContextRegistration> wrapper = descriptor;
             return descriptor.ListeningEvents(descriptor.Types).From(wrapper.Registration.Name).On(route);
-        }
-
-        public static IListeningRouteDescriptor<ListeningCommandsDescriptor<IBoundedContextRegistration>> ListeningInfrastructureCommands(this IBoundedContextRegistration registration)
-        {
-            return registration.ListeningCommands(typeof(ReplayEventsCommand));
-        }
-
-        public static IPublishingCommandsDescriptor<IBoundedContextRegistration> PublishingInfrastructureCommands(this IBoundedContextRegistration registration)
-        {
-            return registration.PublishingCommands(typeof(ReplayEventsCommand));
-        }
-
-
-        public static IListeningRouteDescriptor<ListeningCommandsDescriptor<IBoundedContextRegistration>> ListeningInfrastructureCommands(this IRegistrationWrapper<IBoundedContextRegistration> registration)
-        {
-            return registration.ListeningCommands(typeof(ReplayEventsCommand));
-        }
-
-        public static IPublishingCommandsDescriptor<IBoundedContextRegistration> PublishingInfrastructureCommands(this IRegistrationWrapper<IBoundedContextRegistration> registration)
-        {
-            return registration.PublishingCommands(typeof(ReplayEventsCommand));
-        }
-
+        }        
     }
 }

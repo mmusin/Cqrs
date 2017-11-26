@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using Inceptum.Cqrs.Configuration.BoundedContext;
 using Inceptum.Cqrs.Configuration.Routing;
 using Inceptum.Cqrs.Configuration.Saga;
-using NEventStore;
-using NEventStore.Dispatcher;
-using NEventStore.Persistence.Sql;
 
 namespace Inceptum.Cqrs.Configuration
 {
@@ -116,46 +113,7 @@ namespace Inceptum.Cqrs.Configuration
         {
             return wrapper.Registration.WithCommandsHandler(handler);
         }
-
-
         
-
-        public static IBoundedContextRegistration WithEventStore<T>(this IRegistrationWrapper<IBoundedContextRegistration> wrapper)
-            where T : IEventStoreAdapter
-        {
-             
-            return wrapper.Registration.WithEventStore<T>();
-        }
-
-        public static IBoundedContextRegistration WithEventStore(this IRegistrationWrapper<IBoundedContextRegistration> wrapper, IEventStoreAdapter eventStoreAdapter)
-        {
-            return wrapper.Registration.WithEventStore(eventStoreAdapter);
-        }
-
-        [Obsolete]
-        public static IBoundedContextRegistration WithNEventStore(this IRegistrationWrapper<IBoundedContextRegistration> wrapper, Func<IDispatchCommits, Wireup> configureEventStore)
-        {
-            return wrapper.Registration.WithNEventStore(configureEventStore);
-        }
-
-        [Obsolete]
-        public static IBoundedContextRegistration WithNEventStore(this IRegistrationWrapper<IBoundedContextRegistration> wrapper, Func<IDispatchCommits, IConnectionFactory, Wireup> configureEventStore)
-        {
-            return wrapper.Registration.WithNEventStore(configureEventStore);
-        }
-
-        public static IBoundedContextRegistration WithNEventStore(this IRegistrationWrapper<IBoundedContextRegistration> wrapper, Func< Wireup> configureEventStore)
-        {
-            return wrapper.Registration.WithNEventStore(configureEventStore);
-        }
-
-        public static IBoundedContextRegistration WithNEventStore(this IRegistrationWrapper<IBoundedContextRegistration> wrapper, Func<IConnectionFactory, Wireup> configureEventStore)
-        {
-            return wrapper.Registration.WithNEventStore(configureEventStore);
-        }
-
-
-
         public static IBoundedContextRegistration WithProjection<TProjection, TBatchContext>(this IRegistrationWrapper<IBoundedContextRegistration> wrapper, TProjection projection, string fromBoundContext, int batchSize = 0, int applyTimeoutInSeconds = 0, Func<TProjection, TBatchContext> beforeBatchApply = null, Action<TProjection, TBatchContext> afterBatchApply = null)
         {
             return wrapper.Registration.WithProjection(projection, fromBoundContext, batchSize, applyTimeoutInSeconds, beforeBatchApply, afterBatchApply);
@@ -175,8 +133,6 @@ namespace Inceptum.Cqrs.Configuration
         {
             return wrapper.Registration.WithProjection(fromBoundContext, batchSize, applyTimeoutInSeconds, beforeBatchApply, afterBatchApply);
         }
-
-
 
         public static IBoundedContextRegistration WithProcess(this IRegistrationWrapper<IBoundedContextRegistration> wrapper, object process)
         {

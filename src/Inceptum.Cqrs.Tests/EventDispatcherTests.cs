@@ -10,8 +10,8 @@ using Inceptum.Messaging;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
 using Inceptum.Messaging.RabbitMq;
+using Moq;
 using NUnit.Framework;
-using Rhino.Mocks;
 
 namespace Inceptum.Cqrs.Tests
 {
@@ -269,7 +269,7 @@ namespace Inceptum.Cqrs.Tests
         public void BatchDispatchUnackRmqTest()
         {
             var handler = new EventHandlerWithBatchSupport(1);
-            var endpointProvider = MockRepository.GenerateMock<IEndpointProvider>();
+            var endpointProvider = new Mock<IEndpointProvider>();
            
 
             using (
@@ -283,10 +283,10 @@ namespace Inceptum.Cqrs.Tests
                 var tmpQueue = messagingEngine.CreateTemporaryDestination("RabbitMq",null);
            
                 var endpoint = new Endpoint("RabbitMq", "testExchange" , "testQueue", true, "json");
-                endpointProvider.Expect(r => r.Get("route")).Return(endpoint);
-                endpointProvider.Expect(r => r.Contains("route")).Return(true);
+                endpointProvider.Setup(r => r.Get("route")).Returns(endpoint);
+                endpointProvider.Setup(r => r.Contains("route")).Returns(true);
 
-                using (var engine = new CqrsEngine(new DefaultDependencyResolver(),messagingEngine, endpointProvider,false,
+                using (var engine = new CqrsEngine(new DefaultDependencyResolver(),messagingEngine, endpointProvider.Object,false,
                                                    Register.BoundedContext("bc").ListeningEvents(typeof(DateTime)).From("other").On("route")
                                                    .WithProjection(handler, "other",1,0,
                                                                    h => ((EventHandlerWithBatchSupport)h).OnBatchStart(),

@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading;
-using Castle.Core.Internal;
-using CommonDomain.Persistence;
 using Inceptum.Cqrs.Configuration;
 using Inceptum.Cqrs.InfrastructureCommands;
 using Inceptum.Messaging.Configuration;
@@ -184,12 +180,7 @@ namespace Inceptum.Cqrs
             foreach (var boundedContext in Contexts)
             {
                 boundedContext.Processes.ForEach(p => p.Start(boundedContext, boundedContext.EventsPublisher));
-            }
-
-            foreach (var boundedContext in Contexts.Where(context => context.EventStore != null))
-            {
-                boundedContext.EventStore.Bootstrap();
-            }
+            }            
         }
 
         private void ensureEndpoints()
@@ -308,68 +299,7 @@ namespace Inceptum.Cqrs
                 published = DefaultRouteMap.PublishMessage(m_MessagingEngine,type,message, routeType, priority, remoteBoundedContext);
             }
             return published;
-        }
-
-
-
-        public void ReplayEvents(string boundedContext, string remoteBoundedContext, DateTime @from, Guid? aggregateId, params Type[] types)
-        {
-            ReplayEvents(boundedContext,remoteBoundedContext,@from, aggregateId, l => { } ,types);    
-        }
-
-        public void ReplayEvents(string boundedContext, string remoteBoundedContext, DateTime @from, Guid? aggregateId, Action<long> callback, params Type[] types)
-        {
-            var context = Contexts.FirstOrDefault(bc => bc.Name == boundedContext);
-                if (context == null)
-                throw new ArgumentException(string.Format("bound context {0} not found",boundedContext),"boundedContext");
-
-            var publishDirections = (from route in context.Routes
-                                     from messageRoute in route.MessageRoutes
-                                     where messageRoute.Key.MessageType == typeof(ReplayEventsCommand) && 
-                                           messageRoute.Key.RouteType == RouteType.Commands && 
-                                           messageRoute.Key.Priority == 0 &&
-                                           messageRoute.Key.RemoteBoundedContext == remoteBoundedContext
-                                     select new
-                                     {
-                                         routeName = route.Name,
-                                         endpoint = messageRoute.Value
-
-                                     }).ToArray();
-            if(!publishDirections.Any())
-                throw new InvalidOperationException(string.Format("bound context '{0}' does not support command '{1}' with priority {2}", remoteBoundedContext, typeof(ReplayEventsCommand), 0));
-
-            var direction = publishDirections.First();
-            var ep = direction.endpoint;
-            Destination tmpDestination;
-
-            if (context.GetTempDestination(ep.TransportId, () => m_MessagingEngine.CreateTemporaryDestination(ep.TransportId, "EventReplay"), out tmpDestination))
-            {
-
-                var replayEndpoint = new Endpoint { Destination = tmpDestination, SerializationFormat = ep.SerializationFormat, SharedDestination = true, TransportId = ep.TransportId };
-                var knownEventTypes = (from route in context.Routes
-                                       from messageRoute in route.MessageRoutes
-                                       where  
-                                               messageRoute.Key.RouteType == RouteType.Events &&
-                                               messageRoute.Key.RemoteBoundedContext == remoteBoundedContext
-                                       select  messageRoute.Key.MessageType).ToArray();
- 
-                m_Subscription.Add(m_MessagingEngine.Subscribe(
-                    replayEndpoint,
-                    (@event, acknowledge, headers) => context.EventDispatcher.ProcessReplayedEvent(@event, acknowledge, remoteBoundedContext, headers),
-                    (typeName, acknowledge) => { }, 
-                    "EventReplay",
-                    0,
-                    knownEventTypes.Concat(new []{typeof(ReplayFinishedEvent)}).Distinct().ToArray()));
-            }
-
-            var replayEventsCommand = new ReplayEventsCommand { Id = Guid.NewGuid(), Destination = tmpDestination.Publish, From = @from, AggregateId = aggregateId, SerializationFormat = ep.SerializationFormat, Types = types };
-            context.EventDispatcher.RegisterReplay(replayEventsCommand.Id,callback);
-
-            SendCommand(replayEventsCommand, boundedContext,remoteBoundedContext);
-        }
-
-     
-
+        }        
 
         internal void PublishEvent(object @event, string boundedContext)
         {
@@ -385,23 +315,11 @@ namespace Inceptum.Cqrs
 
         internal IDependencyResolver DependencyResolver {
             get { return m_DependencyResolver; }
-        }
-
-
-        public IRepository GetRepository(string boundedContext)
-        {
-            var context = m_Contexts.FirstOrDefault(bc => bc.Name == boundedContext);
-            if (context == null)
-                throw new ArgumentException(string.Format("bound context {0} not found", boundedContext), "boundedContext");
-            return context.EventStore.Repository();
-        }
+        }        
     }
 
     public interface ICqrsEngine
-    {
-        IRepository GetRepository(string boundedContext);
-        void ReplayEvents(string boundedContext, string remoteBoundedContext, DateTime @from, Guid? aggregateId, params Type[] types);
-        void ReplayEvents(string boundedContext, string remoteBoundedContext, DateTime @from, Guid? aggregateId, Action<long> callback, params Type[] types);
+    {   
         void SendCommand<T>(T command, string boundedContext, string remoteBoundedContext, uint priority = 0);
     }
 }

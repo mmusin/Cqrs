@@ -7,7 +7,6 @@ using Castle.MicroKernel;
 using Castle.MicroKernel.Context;
 using Castle.MicroKernel.Facilities;
 using Castle.MicroKernel.Registration;
-using CommonDomain.Persistence;
 using Inceptum.Cqrs.Configuration;
 using Inceptum.Cqrs.Configuration.BoundedContext;
 using IRegistration = Inceptum.Cqrs.Configuration.IRegistration;
@@ -40,7 +39,7 @@ namespace Inceptum.Cqrs.Castle
         }
     }
 
-    public class CqrsFacility : AbstractFacility, ICqrsEngineBootstrapper, ISubDependencyResolver
+    public class CqrsFacility : AbstractFacility, ICqrsEngineBootstrapper
     {
         private readonly string m_EngineComponetName = Guid.NewGuid().ToString();
         private readonly Dictionary<IHandler, Action<IHandler>> m_WaitList = new Dictionary<IHandler, Action<IHandler>>();
@@ -172,7 +171,7 @@ namespace Inceptum.Cqrs.Castle
                 ? Component.For<ICqrsEngine>().ImplementedBy<InMemoryCqrsEngine>()
                 : Component.For<ICqrsEngine>().ImplementedBy<CqrsEngine>().DependsOn(new { createMissingEndpoints = m_CreateMissingEndpoints });
             Kernel.Register(Component.For<IDependencyResolver>().ImplementedBy<CastleDependencyResolver>());
-            Kernel.Resolver.AddSubResolver(this);
+            
             Kernel.Register(engineReg.Named(m_EngineComponetName).DependsOn(new
             {
                 registrations = m_BoundedContexts.ToArray()
@@ -181,19 +180,7 @@ namespace Inceptum.Cqrs.Castle
                   Component.For<ICommandSender>().ImplementedBy<CommandSender>().DependsOn(new { kernel = Kernel }));
 
             m_CqrsEngine = Kernel.Resolve<ICqrsEngine>();
-        }
-        public bool CanResolve(CreationContext context, ISubDependencyResolver contextHandlerResolver, ComponentModel model, DependencyModel dependency)
-        {
-            var dependsOnBoundedContextRepository = model.ExtendedProperties["dependsOnBoundedContextRepository"] as string;
-            var boundedContext = findBoundedContext(dependsOnBoundedContextRepository);
-            return dependency.TargetType == typeof(IRepository) && dependsOnBoundedContextRepository != null && boundedContext!=null  && boundedContext.HasEventStore;
-        }
-
-        public object Resolve(CreationContext context, ISubDependencyResolver contextHandlerResolver, ComponentModel model, DependencyModel dependency)
-        {
-            var dependsOnBoundedContextRepository = model.ExtendedProperties["dependsOnBoundedContextRepository"] as string;
-            return m_CqrsEngine.GetRepository(dependsOnBoundedContextRepository);
-        }
+        }        
     }
 
 
@@ -239,43 +226,10 @@ namespace Inceptum.Cqrs.Castle
         {
             CqrsEngine.SendCommand(command, boundedContext, remoteBoundedContext, priority);
         }
-
-        public void ReplayEvents(string remoteBoundedContext, DateTime @from, Guid? aggregateId, params Type[] types)
-        {
-            CqrsEngine.ReplayEvents(remoteBoundedContext, remoteBoundedContext, @from, aggregateId, types);
-        }
-
-        public void ReplayEvents(string boundedContext, string remoteBoundedContext, DateTime @from, params Type[] types)
-        {
-            CqrsEngine.ReplayEvents(boundedContext, remoteBoundedContext, @from, null, types);
-        }
-
-        public void ReplayEvents(string boundedContext, string remoteBoundedContext, DateTime @from, Action<long> callback, params Type[] types)
-        {
-            CqrsEngine.ReplayEvents(boundedContext, remoteBoundedContext, @from, null, callback, types);
-        }
-
-        public void ReplayEvents(string boundedContext, string remoteBoundedContext, DateTime @from, Guid? aggregateId, Action<long> callback, params Type[] types)
-        {
-            CqrsEngine.ReplayEvents(boundedContext, remoteBoundedContext, @from, aggregateId, callback, types);
-        }
-
+        
         public void SendCommand<T>(T command, string remoteBoundedContext, uint priority = 0)
         {
             CqrsEngine.SendCommand(command, null, remoteBoundedContext, priority);
-        }
-
-        public void ReplayEvents(string remoteBoundedContext, DateTime @from, params Type[] types)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ReplayEvents(string remoteBoundedContext, DateTime @from, Action<long> callback, params Type[] types)
-        {
-            throw new NotImplementedException();
-        }
-
-
+        }        
     }
-
 }

@@ -1,37 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using Castle.Core.Logging;
 using Castle.Facilities.Startable;
 using Castle.MicroKernel.Handlers;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
-using CommonDomain.Persistence;
 using Inceptum.Cqrs.Castle;
 using Inceptum.Cqrs.Configuration;
 using Inceptum.Cqrs.InfrastructureCommands;
 using Inceptum.Cqrs.Routing;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
-using NEventStore;
-using NEventStore.Logging;
+using Moq;
 using NUnit.Framework;
-using Rhino.Mocks;
 
 namespace Inceptum.Cqrs.Tests
 {
-    class RepositoryDependentComponent
-    {
-        public IRepository Repository { get; set; }
-
-        public RepositoryDependentComponent(IRepository repository)
-        {
-            Repository = repository;
-        }
-    }
-
     internal class CommandsHandler
     {
         public readonly List<object> HandledCommands = new List<object>();
@@ -153,7 +138,7 @@ namespace Inceptum.Cqrs.Tests
                 container.AddFacility<CqrsFacility>(f => f.RunInMemory().Contexts(Register.BoundedContext("bc")));
 
                 Assert.That(() => 
-                container.Register(Component.For<CommandsHandler>().AsCommandsHandler("bc").AsProjection("bc", "remote")), Throws.TypeOf<Exception>());
+                container.Register(Component.For<CommandsHandler>().AsCommandsHandler("bc").AsProjection("bc", "remote")), Throws.TypeOf<InvalidOperationException>());
             }
         }
 
@@ -188,7 +173,7 @@ namespace Inceptum.Cqrs.Tests
             {
                 container.AddFacility<CqrsFacility>(f => f.RunInMemory())
                     .AddFacility<StartableFacility>(); // (f => f.DeferredTryStart());
-                container.Register(Component.For<IMessagingEngine>().Instance(MockRepository.GenerateMock<IMessagingEngine>()));
+                container.Register(Component.For<IMessagingEngine>().Instance(new Mock<IMessagingEngine>().Object));
                 container.Register(Component.For<CqrEngineDependentComponent>().StartUsingMethod("Start"));
                 Assert.That(CqrEngineDependentComponent.Started, Is.False, "Component was started before commandSender initialization");
                 container.Resolve<ICqrsEngineBootstrapper>().Start();
@@ -201,7 +186,7 @@ namespace Inceptum.Cqrs.Tests
         {
             using (var container = new WindsorContainer())
             {
-                container.Register(Component.For<IMessagingEngine>().Instance(MockRepository.GenerateMock<IMessagingEngine>()))
+                container.Register(Component.For<IMessagingEngine>().Instance(new Mock<IMessagingEngine>().Object))
                     .AddFacility<CqrsFacility>(f => f.RunInMemory().Contexts(
                             Register.BoundedContext("local").ListeningEvents(typeof(string)).From("remote").On("remoteEVents")
                             ))
@@ -220,15 +205,15 @@ namespace Inceptum.Cqrs.Tests
         {
             using (var container = new WindsorContainer())
             {
-                container.Register(Component.For<IMessagingEngine>().Instance(MockRepository.GenerateMock<IMessagingEngine>()))
+                container.Register(Component.For<IMessagingEngine>().Instance(new Mock<IMessagingEngine>().Object))
                     .AddFacility<CqrsFacility>(f => f.RunInMemory().Contexts(
                             Register.BoundedContext("local").ListeningEvents(typeof(string)).From("remote").On("remoteEVents")
                             ))
                     .Register(Component.For<EventListenerWithBatchSupport>()
-                    .AsProjection("local", "remote", 
-                            batchSize:2,
+                    .AsProjection("local", "remote",
+                            batchSize: 2,
                             applyTimeoutInSeconds: 0,
-                            beforeBatchApply:listener => listener.CreateDbSession(), 
+                            beforeBatchApply: listener => listener.CreateDbSession(),
                             afterBatchApply: (listener, sbSession) => sbSession.Commit()))
                     .Resolve<ICqrsEngineBootstrapper>().Start();
 
@@ -243,7 +228,7 @@ namespace Inceptum.Cqrs.Tests
                 Assert.That(eventListener.Events, Is.EquivalentTo(new[] { "event1", "event2", "event3", "event4" }), "Event was not dispatched");
                 Assert.That(eventListener.Sessions.Any(), Is.True, "Batch start callback was not called");
                 Assert.That(eventListener.Sessions.Count, Is.EqualTo(2), "Event were not dispatched in batches");
-                Assert.That(eventListener.Sessions[0].Events, Is.EquivalentTo(new[] { "event1", "event2"}), "Wrong events in batch");
+                Assert.That(eventListener.Sessions[0].Events, Is.EquivalentTo(new[] { "event1", "event2" }), "Wrong events in batch");
                 Assert.That(eventListener.Sessions[1].Events, Is.EquivalentTo(new[] { "event3", "event4" }), "Wrong events in batch");
                 Assert.That(eventListener.Sessions[0].Commited, Is.True, "Batch applied callback was not called");
                 Assert.That(eventListener.Sessions[1].Commited, Is.True, "Batch applied callback was not called");
@@ -256,7 +241,7 @@ namespace Inceptum.Cqrs.Tests
             using (var container = new WindsorContainer())
             {
                 container
-                    .Register(Component.For<IMessagingEngine>().Instance(MockRepository.GenerateMock<IMessagingEngine>()))
+                    .Register(Component.For<IMessagingEngine>().Instance(new Mock<IMessagingEngine>().Object))
                     .AddFacility<CqrsFacility>(f => f.RunInMemory().Contexts(Register.BoundedContext("bc")))
                     .Register(Component.For<CommandsHandler>().AsCommandsHandler("bc").LifestyleSingleton())
                     .Resolve<ICqrsEngineBootstrapper>().Start();
@@ -274,7 +259,7 @@ namespace Inceptum.Cqrs.Tests
         {
             using (var container = new WindsorContainer())
             {
-                var messagingEngine = MockRepository.GenerateMock<IMessagingEngine>();
+                var messagingEngine = new Mock<IMessagingEngine>().Object;
                 var bootstrapper = container
                     .Register(Component.For<IMessagingEngine>().Instance(messagingEngine))
                     .AddFacility<CqrsFacility>(f => f.RunInMemory().Contexts(
@@ -293,7 +278,7 @@ namespace Inceptum.Cqrs.Tests
                 {
                     exception = e;
                 }
-                Assert.That(exception, Is.Not.Null,"Component with ICommandSender dependency is resolvable before cqrs engine is bootstrapped");
+                Assert.That(exception, Is.Not.Null, "Component with ICommandSender dependency is resolvable before cqrs engine is bootstrapped");
                 Assert.That(exception.Message.Contains("Service 'Inceptum.Cqrs.ICommandSender' which was not registered"), Is.True, "Component with ICommandSender dependency is resolvable before cqrs engine is bootstrapped");
                 bootstrapper.Start();
                 var component = container.Resolve<CommandSenderDependentComponent>();
@@ -310,7 +295,7 @@ namespace Inceptum.Cqrs.Tests
             using (var container = new WindsorContainer())
             {
                 container
-                    .Register(Component.For<IMessagingEngine>().Instance(MockRepository.GenerateMock<IMessagingEngine>()))
+                    .Register(Component.For<IMessagingEngine>().Instance(new Mock<IMessagingEngine>().Object))
                     .AddFacility<CqrsFacility>(f => f.RunInMemory().Contexts(Register.BoundedContext("bc")))
                     .Register(Component.For<CommandsHandler>().AsCommandsHandler("bc"))
                     .Resolve<ICqrsEngineBootstrapper>().Start();
@@ -338,7 +323,7 @@ namespace Inceptum.Cqrs.Tests
             using (var container = new WindsorContainer())
             {
                 container
-                    .Register(Component.For<IMessagingEngine>().Instance(MockRepository.GenerateMock<IMessagingEngine>()))
+                    .Register(Component.For<IMessagingEngine>().Instance(new Mock<IMessagingEngine>().Object))
                     .AddFacility<CqrsFacility>(f => f.RunInMemory().Contexts(Register.BoundedContext("bc")))
                     .Register(Component.For<CommandsHandler>().AsCommandsHandler("bc"))
                     .Resolve<ICqrsEngineBootstrapper>().Start();
@@ -364,13 +349,14 @@ namespace Inceptum.Cqrs.Tests
                 Assert.That(acknowledged, Is.EqualTo(false));
             }
         }
+
         [Test]
         public void FailedCommandHandlerCausesRetryTest()
         {
             using (var container = new WindsorContainer())
             {
                 container
-                    .Register(Component.For<IMessagingEngine>().Instance(MockRepository.GenerateMock<IMessagingEngine>()))
+                    .Register(Component.For<IMessagingEngine>().Instance(new Mock<IMessagingEngine>().Object))
                     .AddFacility<CqrsFacility>(f => f.RunInMemory().Contexts(Register.BoundedContext("bc").FailedCommandRetryDelay(100)))
                     .Register(Component.For<CommandsHandler>().AsCommandsHandler("bc"))
                     .Resolve<ICqrsEngineBootstrapper>().Start();
@@ -395,7 +381,7 @@ namespace Inceptum.Cqrs.Tests
         {
             using (var container = new WindsorContainer())
             {
-                container.Register(Component.For<IMessagingEngine>().Instance(MockRepository.GenerateMock<IMessagingEngine>()));
+                container.Register(Component.For<IMessagingEngine>().Instance(new Mock<IMessagingEngine>().Object));
                 container.AddFacility<CqrsFacility>(f => f.RunInMemory().Contexts(
                     Register.BoundedContext("bc1")
                         .PublishingEvents(typeof(int)).With("events1").WithLoopback()
@@ -425,36 +411,6 @@ namespace Inceptum.Cqrs.Tests
                 Assert.That(TestSaga.Complete.WaitOne(1000), Is.True, "Saga has not got events or failed to send command");
             }
         }
-        [Test]
-        [TestCase(true,TestName = "WithRepositoryAccess for custom processing options")]
-        [TestCase(false, TestName = "WithRepositoryAccess for default processing options")]
-        public void WithRepositoryAccessTest(bool withProcessingOptions)
-        {
-            var log = MockRepository.GenerateMock<ILog>();
-            using (var container = new WindsorContainer())
-            {
-                container
-                    .Register(Component.For<IMessagingEngine>().Instance(MockRepository.GenerateMock<IMessagingEngine>()))
-                    .AddFacility<CqrsFacility>(f =>
-                    {
-                        f.RunInMemory().Contexts(Register.BoundedContext("bc")
-                            .WithNEventStore(dispatchCommits => Wireup.Init()
-                                .LogTo(type => log)
-                                .UsingInMemoryPersistence()
-                                .InitializeStorageEngine()
-                                .UsingJsonSerialization()
-                                .UsingSynchronousDispatchScheduler()
-                                .DispatchTo(dispatchCommits))
-                            .ProcessingOptions("commands"));
-                    })
-                    .Register(Component.For<RepositoryDependentComponent>().WithRepositoryAccess("bc"))
-                    .Resolve<ICqrsEngineBootstrapper>().Start();
-                var cqrsEngine = (CqrsEngine)container.Resolve<ICqrsEngine>();
-                var repositoryDependentComponent = container.Resolve<RepositoryDependentComponent>();
-                Assert.That(repositoryDependentComponent.Repository, Is.Not.Null, "Repository was not injected");
-            }
-        }
-
     }
 
 

@@ -1,8 +1,5 @@
 using System;
 using Inceptum.Cqrs.Configuration.Routing;
-using NEventStore;
-using NEventStore.Dispatcher;
-using NEventStore.Persistence.Sql;
 
 namespace Inceptum.Cqrs.Configuration.BoundedContext
 {
@@ -11,8 +8,7 @@ namespace Inceptum.Cqrs.Configuration.BoundedContext
         public bool HasEventStore { get; set; }  
         public BoundedContextRegistration(string name):base(name)
         {
-            FailedCommandRetryDelayInternal = 60000;
-            AddDescriptor(new InfrastructureCommandsHandlerDescriptor());
+            FailedCommandRetryDelayInternal = 60000;            
         }
 
         public long FailedCommandRetryDelayInternal { get; set; }
@@ -33,60 +29,6 @@ namespace Inceptum.Cqrs.Configuration.BoundedContext
             return AddDescriptor(new PublishingEventsDescriptor<IBoundedContextRegistration>(this, types));
         }
  
-
-       public IBoundedContextRegistration WithEventStore<T>()
-            where T:IEventStoreAdapter
-        {
-            HasEventStore = true;
-            AddDescriptor(new EventStoreDescriptor<T>());
-            return this;
-        }
-
-       public IBoundedContextRegistration WithEventStore(IEventStoreAdapter eventStoreAdapter)
-        {
-            HasEventStore = true;
-            AddDescriptor(new EventStoreDescriptor(eventStoreAdapter));
-            return this;
-        }
-
-       public IBoundedContextRegistration WithEventStore(Func<Context, IDependencyResolver, IEventStoreAdapter> eventStoreAdapterFactory)
-        {
-            HasEventStore = true;
-            AddDescriptor(new EventStoreDescriptor(eventStoreAdapterFactory));
-            return this;
-        }
-
-        [Obsolete]
-        public IBoundedContextRegistration WithNEventStore(Func<IDispatchCommits, Wireup> configureEventStore)
-        {
-            HasEventStore = true;
-            AddDescriptor(new NEventStoreDescriptor((commits, factory) => configureEventStore(commits)));
-            return this;
-        }
-
-        [Obsolete]
-        public IBoundedContextRegistration WithNEventStore(Func<IDispatchCommits, IConnectionFactory, Wireup> configureEventStore)
-        {
-            HasEventStore = true;
-            AddDescriptor(new NEventStoreDescriptor(configureEventStore));
-            return this;
-        }
-         
-        public IBoundedContextRegistration WithNEventStore(Func< Wireup> configureEventStore)
-        {
-            HasEventStore = true;
-            AddDescriptor(new NEventStoreDescriptor((factory) => configureEventStore()));
-            return this;
-        }
-
-        public IBoundedContextRegistration WithNEventStore(Func<IConnectionFactory, Wireup> configureEventStore)
-        {
-            HasEventStore = true;
-            AddDescriptor(new NEventStoreDescriptor(configureEventStore));
-            return this;
-        }
- 
-
         public IBoundedContextRegistration FailedCommandRetryDelay(long delay)
         {
             if (delay < 0) throw new ArgumentException("threadCount should be greater or equal to 0", "delay");
