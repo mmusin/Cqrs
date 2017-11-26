@@ -4,7 +4,7 @@ using CommonDomain.Persistence;
 using Inceptum.Cqrs.EventSourcing;
 using NEventStore;
 using NEventStore.Dispatcher;
-using NEventStore.Persistence.SqlPersistence;
+using NEventStore.Persistence.Sql;
 
 namespace Inceptum.Cqrs.Configuration.BoundedContext
 {

@@ -14,7 +14,7 @@ namespace Inceptum.Cqrs.EventSourcing
 
         private readonly IDispatchCommits m_Dispatcher;
         private readonly IPersistStreams m_Persistence;
-        private readonly BlockingCollection<Commit> m_Queue;
+        private readonly BlockingCollection<ICommit> m_Queue;
         private Task m_Worker;
         private bool m_Disposed;
 
@@ -22,13 +22,18 @@ namespace Inceptum.Cqrs.EventSourcing
         {
             m_Dispatcher = dispatcher;
             m_Persistence = persistence;
-            m_Queue = new BlockingCollection<Commit>(new ConcurrentQueue<Commit>());
+            m_Queue = new BlockingCollection<ICommit>(new ConcurrentQueue<ICommit>());
             
         }
 
-        public void ScheduleDispatch(Commit commit)
+        public void ScheduleDispatch(ICommit commit)
         {
             m_Queue.Add(commit);
+        }
+
+        public void Start()
+        {
+          
         }
 
         private void working()
@@ -40,7 +45,7 @@ namespace Inceptum.Cqrs.EventSourcing
             }
         }
 
-        private void dispatchImmediately(Commit commit)
+        private void dispatchImmediately(ICommit commit)
         {
             try
             {
@@ -53,7 +58,7 @@ namespace Inceptum.Cqrs.EventSourcing
             }
         }
 
-        private void markAsDispatched(Commit commit)
+        private void markAsDispatched(ICommit commit)
         {
             try
             {

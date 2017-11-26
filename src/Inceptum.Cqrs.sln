@@ -1,17 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.10
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7EA26665-7EBA-432C-82B3-4DE3278B2E83}"
 	ProjectSection(SolutionItems) = preProject
 		SolutionInfo.cs = SolutionInfo.cs
 		VersionInfo.cs = VersionInfo.cs
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inceptum.Cqrs", "Inceptum.Cqrs\Inceptum.Cqrs.csproj", "{7CC821BB-5EC7-4170-AC45-236900D48514}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Inceptum.Cqrs", "Inceptum.Cqrs\Inceptum.Cqrs.csproj", "{5E6D3D86-33B6-4821-9F40-0FCFD4824EA0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inceptum.Cqrs.Tests", "Inceptum.Cqrs.Tests\Inceptum.Cqrs.Tests.csproj", "{5FA73068-B2C7-4C93-9595-CEF1EC3DDC8C}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inceptum.Cqrs.EventStore", "Inceptum.Cqrs.EventStore\Inceptum.Cqrs.EventStore.csproj", "{E5635040-349D-42D0-8A04-8910DAC2CA59}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inceptum.Cqrs.Tests", "Inceptum.Cqrs.Tests\Inceptum.Cqrs.Tests.csproj", "{D940DFC0-99D1-43D0-89D6-B75198396FBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,20 +19,19 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7CC821BB-5EC7-4170-AC45-236900D48514}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7CC821BB-5EC7-4170-AC45-236900D48514}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7CC821BB-5EC7-4170-AC45-236900D48514}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7CC821BB-5EC7-4170-AC45-236900D48514}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5FA73068-B2C7-4C93-9595-CEF1EC3DDC8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5FA73068-B2C7-4C93-9595-CEF1EC3DDC8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5FA73068-B2C7-4C93-9595-CEF1EC3DDC8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5FA73068-B2C7-4C93-9595-CEF1EC3DDC8C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E5635040-349D-42D0-8A04-8910DAC2CA59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E5635040-349D-42D0-8A04-8910DAC2CA59}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E5635040-349D-42D0-8A04-8910DAC2CA59}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E5635040-349D-42D0-8A04-8910DAC2CA59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E6D3D86-33B6-4821-9F40-0FCFD4824EA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E6D3D86-33B6-4821-9F40-0FCFD4824EA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E6D3D86-33B6-4821-9F40-0FCFD4824EA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E6D3D86-33B6-4821-9F40-0FCFD4824EA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D940DFC0-99D1-43D0-89D6-B75198396FBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D940DFC0-99D1-43D0-89D6-B75198396FBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D940DFC0-99D1-43D0-89D6-B75198396FBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D940DFC0-99D1-43D0-89D6-B75198396FBA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AAF97ED7-09E5-4B97-96D2-7622E8DE2ED9}
 	EndGlobalSection
 EndGlobal

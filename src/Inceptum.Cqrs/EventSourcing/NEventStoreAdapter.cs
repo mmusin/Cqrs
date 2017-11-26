@@ -7,6 +7,7 @@ using CommonDomain.Core;
 using CommonDomain.Persistence;
 using CommonDomain.Persistence.EventStore;
 using NEventStore;
+using NEventStore.Persistence;
 
 namespace Inceptum.Cqrs.EventSourcing
 {

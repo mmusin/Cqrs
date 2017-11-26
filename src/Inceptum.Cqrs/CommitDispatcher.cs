@@ -17,7 +17,7 @@ namespace Inceptum.Cqrs
         {
         }
 
-        public void Dispatch(Commit commit)
+        public void Dispatch(ICommit commit)
         {
             if (m_Logger.IsDebugEnabled) m_Logger.Debug(string.Format("Stream [{0}] Commit [{1}] dispatching {2} events", commit.StreamId, commit.CommitId, commit.Events.Count));
             foreach (var @event in commit.Events)

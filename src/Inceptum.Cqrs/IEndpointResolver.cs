@@ -32,7 +32,7 @@ namespace Inceptum.Cqrs
             {
                 return endpointProvider.Get(route);
             }
-            throw new ConfigurationErrorsException(string.Format("Endpoint '{0}' not found",route));
+            throw new ApplicationException(string.Format("Endpoint '{0}' not found",route));
         }
     }
 

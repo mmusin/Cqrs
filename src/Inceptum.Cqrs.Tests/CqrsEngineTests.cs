@@ -1,25 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Reactive.Disposables;
 using System.Threading;
-using Castle.Windsor.Diagnostics.DebuggerViews;
 using CommonDomain;
 using CommonDomain.Core;
 using CommonDomain.Persistence;
-using EventStore.ClientAPI;
-using EventStore.ClientAPI.SystemData;
 using Inceptum.Cqrs.Configuration;
-using Inceptum.Cqrs.EventStore;
 using Inceptum.Cqrs.Routing;
 using Inceptum.Messaging;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
 using Inceptum.Messaging.RabbitMq;
 using NEventStore;
-using NEventStore.Dispatcher;
 using NEventStore.Logging;
 using NUnit.Framework;
 using Rhino.Mocks;
@@ -573,75 +567,9 @@ namespace Inceptum.Cqrs.Tests
         */
 
 
-
-
+            
         [Test]
-        [Ignore]
-        public void InvestigationTest1()
-        {
-            var eventStoreConnection = EventStoreConnection.Create(ConnectionSettings.Create().UseConsoleLogger().SetDefaultUserCredentials(new UserCredentials("admin", "changeit")),
-                                                                   new IPEndPoint(IPAddress.Loopback, 1113));
-            eventStoreConnection.Connect();
-            eventStoreConnection.SubscribeToStreamFrom("$stats-127.0.0.1:2113", 0, false, (subscription, @event) =>
-                {
-                    Console.WriteLine(".");
-                }, subscription => { Console.WriteLine(subscription); });
-
-            Thread.Sleep(10000);
-        }
-
-
-        [Test]
-        //[Ignore("Does not work on tc")]
-        //      [TestCase(true, TestName = "GetEventStore")]
-        [TestCase(false, TestName = "NEventStore")]
-        public void GetEventStoreTest(bool getES)
-        {
-
-            var log = MockRepository.GenerateMock<ILog>();
-            var eventsListener = new EventsListener();
-            var localBoundedContext = Register.BoundedContext("local")
-                                    .PublishingEvents(typeof(TestAggregateRootNameChangedEvent), typeof(TestAggregateRootCreatedEvent)).With("events").WithLoopback()
-                                    .ListeningCommands(typeof(string)).On("commands1").WithLoopback()
-                                    .WithCommandsHandler<EsCommandHandler>();
-            if (getES)
-            {
-                var eventStoreConnection = EventStoreConnection.Create(ConnectionSettings.Default, new IPEndPoint(IPAddress.Loopback, 1113));
-                eventStoreConnection.Connect();
-                localBoundedContext.WithGetEventStore(eventStoreConnection);
-            }
-            else
-            {
-                localBoundedContext.WithNEventStore(dispatchCommits => Wireup.Init()
-                    .LogTo(type => log)
-                    .UsingInMemoryPersistence()
-                    .InitializeStorageEngine()
-                    .UsingJsonSerialization()
-                    .UsingSynchronousDispatchScheduler()
-                    .DispatchTo(dispatchCommits));
-            }
-
-            using (var engine = new InMemoryCqrsEngine(localBoundedContext,
-
-                Register.BoundedContext("projections")
-                            .ListeningEvents(typeof(TestAggregateRootNameChangedEvent), typeof(TestAggregateRootCreatedEvent)).From("local").On("events")
-                            .WithProjection(eventsListener, "local")))
-            {
-                var guid = Guid.NewGuid();
-                engine.SendCommand(guid + ":create", "local", "local");
-                engine.SendCommand(guid + ":changeName:newName", "local", "local");
-
-                Thread.Sleep(5000);
-                Console.WriteLine("Disposing...");
-            }
-
-            Assert.That(eventsListener.Handled.Select(e => e.GetType()).ToArray(), Is.EqualTo(new[] { typeof(TestAggregateRootCreatedEvent), typeof(TestAggregateRootNameChangedEvent) }), "Events were not stored or published");
-            Console.WriteLine("Dispose completed.");
-        }
-
-
-        [Test]
-        [Ignore]
+        [Ignore("integration")]
         public void ReplayEventsRmqTest()
         {
             var endpointResolver = MockRepository.GenerateMock<IEndpointResolver>();
@@ -731,57 +659,7 @@ namespace Inceptum.Cqrs.Tests
             }
 
             Assert.That(eventsListener.Handled.Count, Is.EqualTo(3 + expectedReplayCount), "Wrong number of events was replayed");
-        }
-
-        [Test]
-        public void ReplayEventsShouldConsiderEventUpconversionTest()
-        {
-            var eventsListener = new EventsListener();
-            var localBoundedContext = Register.BoundedContext("local")
-                .PublishingEvents(typeof(TestAggregateRootCreatedEvent), typeof(TestAggregateRootNameChangedEvent)).With("events").WithLoopback()
-                .ListeningCommands(typeof(string)).On("commands").WithLoopback()
-                .ListeningInfrastructureCommands().On("commands").WithLoopback()
-                .WithCommandsHandler<EsCommandHandler>()
-                .WithNEventStore(dispatchCommits => Wireup.Init()
-                    .UsingInMemoryPersistence()
-                    .InitializeStorageEngine()
-                    .UsingJsonSerialization()
-                    .UsingEventUpconversion().AddConverter(new TestAggregateRootNameChangedEventUpgrade())
-                    .UsingSynchronousDispatchScheduler()
-                    .DispatchTo(dispatchCommits));
-
-            using (
-                  var engine = new InMemoryCqrsEngine(localBoundedContext,
-                      Register.BoundedContext("projections")
-                      .ListeningEvents(typeof(TestAggregateRootCreatedEvent), typeof(TestAggregateRootNameChangedEvent)).From("local").On("events")
-                          .WithProjection(eventsListener, "local",batchSize:5,applyTimeoutInSeconds:1)
-                          .PublishingInfrastructureCommands().To("local").With("commands")))
-            {
-
-                var guid = Guid.Parse("D552E345-81CB-40D8-AAB7-6BAD7E6B407B");
-                engine.SendCommand(guid + ":create", "local", "local");
-                engine.SendCommand(guid + ":changeName:newName", "local", "local");
-                int time = 0;
-                while (eventsListener.Handled.Count != 2)
-                {
-                    eventsListener.EventReceived.WaitOne(1000);
-                    Assert.That(time++, Is.LessThan(5),"Waited too long for initial events to be received");
-                }
-                Thread.Sleep(2500);//Give some time for the batch to be applyed by timeout
-                
-                eventsListener.Reset();
-                
-                var replayFinished = new ManualResetEvent(false);
-                engine.ReplayEvents("projections", "local", DateTime.MinValue, null, l => replayFinished.Set());
-
-                Assert.That(replayFinished.WaitOne(3000), Is.True, "Events were not replayed");
-            }
-
-            Assert.That(eventsListener.Handled.Count, Is.EqualTo(2), "Wrong number of events was replayed");
-            Assert.That(eventsListener.CreatedCalledCounter, Is.EqualTo(2), "Expected event upconvertion didn't happen");
-            Assert.That(eventsListener.NameChangedCalledCounter, Is.EqualTo(0), "Expected event upconvertion didn't happen");
-        }
-
+        }      
     }
 
     public class TestProcess : IProcess

@@ -16,7 +16,7 @@ namespace Inceptum.Cqrs.Tests
     [TestFixture]
     public class CommandDispatcherTests
     {
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             // Step 1. Create configuration object 
@@ -80,15 +80,18 @@ namespace Inceptum.Cqrs.Tests
             Assert.That(handler.HandledCommands, Is.EquivalentTo(new object[] { (Int64)1 }), "Some commands were not dispatched");
         }
 
-        [Test]
-        [ExpectedException(ExpectedException = typeof(InvalidOperationException), ExpectedMessage = "Only one handler per command is allowed. Command System.String handler is already registered in bound context testBC. Can not register Inceptum.Cqrs.Tests.Handler as handler for it")]
+        [Test]        
         public void MultipleHandlersAreNotAllowedDispatchTest()
         {
             var dispatcher = new CommandDispatcher("testBC");
             var handler1 = new Handler();
             var handler2 = new Handler();
-            dispatcher.Wire(handler1);
-            dispatcher.Wire(handler2);
+
+            Assert.That(() =>
+            {
+                dispatcher.Wire(handler1);
+                dispatcher.Wire(handler2);
+            }, Throws.TypeOf<InvalidOperationException>());
         }
 
 

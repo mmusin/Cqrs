@@ -145,17 +145,17 @@ namespace Inceptum.Cqrs.Tests
     {
 
 
-        [Test]
-        [ExpectedException(ExpectedMessage = "Component can not be projection and commands handler simultaneousely")]
+        [Test]        
         public void ComponentCanNotBeProjectionAndCommandsHandlerSimultaneousely()
         {
             using (var container = new WindsorContainer())
             {
                 container.AddFacility<CqrsFacility>(f => f.RunInMemory().Contexts(Register.BoundedContext("bc")));
-                container.Register(Component.For<CommandsHandler>().AsCommandsHandler("bc").AsProjection("bc", "remote"));
+
+                Assert.That(() => 
+                container.Register(Component.For<CommandsHandler>().AsCommandsHandler("bc").AsProjection("bc", "remote")), Throws.TypeOf<Exception>());
             }
         }
-
 
         [Test]
         public void CqrsEngineIsResolvableAsDependencyOnlyAfterBootstrapTest()

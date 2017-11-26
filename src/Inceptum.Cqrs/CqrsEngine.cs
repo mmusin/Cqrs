@@ -45,7 +45,7 @@ namespace Inceptum.Cqrs
 
         public Endpoint Get(string endpointName)
         {
-            throw new ConfigurationErrorsException(string.Format("Endpoint '{0}' not found",endpointName));
+            throw new ApplicationException(string.Format("Endpoint '{0}' not found",endpointName));
         }
     }
 
@@ -256,7 +256,7 @@ namespace Inceptum.Cqrs
             }
 
             if (!allEndpointsAreValid)
-                throw new ConfigurationErrorsException(errorMessage.ToString());
+                throw new ApplicationException(errorMessage.ToString());
 
             m_Logger.Debug(log);
         }
@@ -273,8 +273,8 @@ namespace Inceptum.Cqrs
         {
             if (disposing)
             {
-                Contexts.Where(b => b != null).Select(c=>c.Processes).Where(p=>p!=null).SelectMany(p=>p).ForEach(process => process.Dispose());
-                Contexts.Where(b => b != null).ForEach(context => context.Dispose());
+                Contexts.Where(b => b != null).Select(c=>c.Processes).Where(p=>p!=null).SelectMany(p=>p).ToList().ForEach(process => process.Dispose());
+                Contexts.Where(b => b != null).ToList().ForEach(context => context.Dispose());
 
                 if (m_Subscription != null)
                     m_Subscription.Dispose();

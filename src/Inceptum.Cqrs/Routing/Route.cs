@@ -146,7 +146,7 @@ namespace Inceptum.Cqrs.Routing
             if(Type==null)
                 Type=RouteType.Commands;
             if(Type!=RouteType.Commands)
-                throw new ConfigurationErrorsException(string.Format("Can not publish commands with events route '{0}'.",Name));
+                throw new ApplicationException(string.Format("Can not publish commands with events route '{0}'.",Name));
             var routingKey = new RoutingKey
             {
                 LocalContext = m_Context,
@@ -164,7 +164,7 @@ namespace Inceptum.Cqrs.Routing
             if (Type == null)
                 Type = RouteType.Commands;
             if (Type != RouteType.Commands)
-                throw new ConfigurationErrorsException(string.Format("Can not subscribe for commands on events route '{0}'.", Name));
+                throw new ApplicationException(string.Format("Can not subscribe for commands on events route '{0}'.", Name));
 
             var routingKey = new RoutingKey
             {
@@ -183,7 +183,7 @@ namespace Inceptum.Cqrs.Routing
             if (Type == null)
                 Type = RouteType.Events;
             if (Type != RouteType.Events)
-                throw new ConfigurationErrorsException(string.Format("Can not publish for events with commands route '{0}'.", Name));
+                throw new ApplicationException(string.Format("Can not publish for events with commands route '{0}'.", Name));
 
 
             var routingKey = new RoutingKey
@@ -202,7 +202,7 @@ namespace Inceptum.Cqrs.Routing
             if (Type == null)
                 Type = RouteType.Events;
             if (Type != RouteType.Events)
-                throw new ConfigurationErrorsException(string.Format("Can not subscribe for events on commands route '{0}'.", Name));
+                throw new ApplicationException(string.Format("Can not subscribe for events on commands route '{0}'.", Name));
 
             var routingKey = new RoutingKey
             {
