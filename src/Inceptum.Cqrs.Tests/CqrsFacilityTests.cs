@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Castle.Facilities.Startable;
 using Castle.MicroKernel.Handlers;
 using Castle.MicroKernel.Registration;
@@ -10,10 +11,14 @@ using Inceptum.Cqrs.Castle;
 using Inceptum.Cqrs.Configuration;
 using Inceptum.Cqrs.InfrastructureCommands;
 using Inceptum.Cqrs.Routing;
+using Inceptum.Messaging;
+using Inceptum.Messaging.Castle;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
+using Inceptum.Messaging.RabbitMq;
 using Moq;
 using NUnit.Framework;
+using ProtoBuf;
 
 namespace Inceptum.Cqrs.Tests
 {
@@ -377,25 +382,28 @@ namespace Inceptum.Cqrs.Tests
         }
 
         [Test]
-        public void SagaTest()
+        public async Task SagaTest()
         {
             using (var container = new WindsorContainer())
             {
-                container.Register(Component.For<IMessagingEngine>().Instance(new Mock<IMessagingEngine>().Object));
-                container.AddFacility<CqrsFacility>(f => f.RunInMemory().Contexts(
-                    Register.BoundedContext("bc1")
-                        .PublishingEvents(typeof(int)).With("events1").WithLoopback()
-                        .ListeningCommands(typeof(string)).On("commands1").WithLoopback()
+                container.AddFacility<MessagingFacility>(f => f.WithTransport("rmq", new TransportInfo("amqp://localhost/LKK", "guest", "guest", "None", "RabbitMq")).WithTransportFactory<RabbitMqTransportFactory>());
+
+                container.AddFacility<CqrsFacility>(f => f.CreateMissingEndpoints().Contexts(
+                    Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("rmq", "json", environment: "dev")),
+                    Register.BoundedContext("operations")
+                        .PublishingCommands(typeof(CreateCashOutCommand)).To("lykke-wallet").With("operations-commands")
+                        .ListeningEvents(typeof(CashOutCreatedEvent)).From("lykke-wallet").On("lykke-wallet-events"),
+
+                    Register.BoundedContext("lykke-wallet")
+                        .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(2).TotalMilliseconds)
+                        .ListeningCommands(typeof(CreateCashOutCommand)).On("operations-commands")
+                        .PublishingEvents(typeof(CashOutCreatedEvent)).With("lykke-wallet-events")
                         .WithCommandsHandler<CommandHandler>(),
-                    Register.BoundedContext("bc2")
-                        .PublishingEvents(typeof(int)).With("events2").WithLoopback()
-                        .ListeningCommands(typeof(string)).On("commands2").WithLoopback()
-                        .WithCommandsHandler<CommandHandler>(),
-                    Register.Saga<TestSaga>("SomeIntegration")
-                        .ListeningEvents(typeof(int)).From("bc1").On("events1")
-                        .ListeningEvents(typeof(int)).From("bc2").On("events2")
-                        .PublishingCommands(typeof(string)).To("bc2").With("commands2"),
-                    Register.DefaultRouting.PublishingCommands(typeof(string)).To("bc2").With("commands2")
+
+                    Register.Saga<TestSaga>("swift-cashout")
+                        .ListeningEvents(typeof(CashOutCreatedEvent)).From("lykke-wallet").On("lykke-wallet-events"),
+
+                    Register.DefaultRouting.PublishingCommands(typeof(CreateCashOutCommand)).To("lykke-wallet").With("operations-commands")
                    ));
 
                 container.Register(
@@ -405,8 +413,11 @@ namespace Inceptum.Cqrs.Tests
 
                 container.Resolve<ICqrsEngineBootstrapper>().Start();
 
-                var cqrsEngine = (CqrsEngine)container.Resolve<ICqrsEngine>();
-                cqrsEngine.SendCommand("cmd", "bc1", "bc1");
+                var commandSender = container.Resolve<ICommandSender>();
+
+                commandSender.SendCommand(new CreateCashOutCommand { Payload = "test data" }, "lykke-wallet");
+
+                await Task.Delay(TimeSpan.FromSeconds(10));
 
                 Assert.That(TestSaga.Complete.WaitOne(1000), Is.True, "Saga has not got events or failed to send command");
             }
@@ -414,18 +425,31 @@ namespace Inceptum.Cqrs.Tests
     }
 
 
+    [ProtoContract]
+    public class CashOutCreatedEvent
+    {
+
+    }
+
+    [ProtoContract]
+    public class CreateCashOutCommand
+    {
+        [ProtoMember(1)]
+        public string Payload { get; set; }
+    }
+
+
     public class TestSaga
     {
         public static List<string> Messages = new List<string>();
         public static ManualResetEvent Complete = new ManualResetEvent(false);
-        private void Handle(int @event, ICommandSender sender, string boundedContext)
+        private void Handle(CashOutCreatedEvent @event, ICommandSender sender, string boundedContext)
         {
             var message = string.Format("Event from {0} is caught by saga:{1}", boundedContext, @event);
             Messages.Add(message);
-            if (boundedContext == "bc1")
-                sender.SendCommand("cmd", "bc2");
-            if (boundedContext == "bc2")
-                Complete.Set();
+
+            Complete.Set();
+
             Console.WriteLine(message);
         }
     }
@@ -439,37 +463,5 @@ namespace Inceptum.Cqrs.Tests
         {
             CommandSender = commandSender;
         }
-    }
-
-    public class EventListenerWithICommandSenderDependency
-    {
-        internal ICommandSender Sender { get; set; }
-
-        public EventListenerWithICommandSenderDependency()
-        {
-        }
-
-        void Handle(string m, ICommandSender sender)
-        {
-            Sender = sender;
-        }
-    }
-
-    public class FakeEndpointResolver : IEndpointResolver
-    {
-        private readonly Dictionary<string, Endpoint> m_Endpoints = new Dictionary<string, Endpoint>
-            {
-                {"eventExchange", new Endpoint("test", "unistream.processing.events", true, "json")},
-                {"eventQueue", new Endpoint("test", "unistream.processing.UPlusAdapter.TransferPublisher", true, "json")},
-                {"commandExchange", new Endpoint("test", "unistream.u1.commands", true, "json")},
-                {"commandQueue", new Endpoint("test", "unistream.u1.commands", true, "json")}
-            };
-
-
-        public Endpoint Resolve(string route, RoutingKey key, IEndpointProvider endpointProvider)
-        {
-            return m_Endpoints[route];
-        }
-    }
-
+    }    
 }

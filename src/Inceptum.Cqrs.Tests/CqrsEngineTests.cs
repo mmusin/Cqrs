@@ -30,30 +30,13 @@ namespace Inceptum.Cqrs.Tests
         {
         }
 
+        public void Handle(CreateCashOutCommand command, IEventPublisher eventPublisher)
+        {
+            Thread.Sleep(m_ProcessingTimeout);
 
-        public void Handle(decimal command, IEventPublisher eventPublisher)
-        {
-            Thread.Sleep(m_ProcessingTimeout);
-            Console.WriteLine(Thread.CurrentThread.ManagedThreadId + " command recived:" + command);
-            eventPublisher.PublishEvent(++counter);
-            lock (AcceptedCommands)
-                AcceptedCommands.Add(command);
-        }
-        public void Handle(string command, IEventPublisher eventPublisher)
-        {
-            Thread.Sleep(m_ProcessingTimeout);
-            Console.WriteLine(Thread.CurrentThread.ManagedThreadId + " command recived:" + command);
-            eventPublisher.PublishEvent(++counter);
-            lock (AcceptedCommands)
-                AcceptedCommands.Add(command);
-        }
-        public void Handle(DateTime command, IEventPublisher eventPublisher)
-        {
-            Thread.Sleep(m_ProcessingTimeout);
-            Console.WriteLine(Thread.CurrentThread.ManagedThreadId + " command recived:" + command);
-            eventPublisher.PublishEvent(++counter);
-            lock (AcceptedCommands)
-                AcceptedCommands.Add(command);
+            Console.WriteLine(Thread.CurrentThread.ManagedThreadId + " command recived:" + command.Payload);
+
+            eventPublisher.PublishEvent(new CashOutCreatedEvent());
         }
     }
     

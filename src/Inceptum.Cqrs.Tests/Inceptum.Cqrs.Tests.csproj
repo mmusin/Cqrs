@@ -15,6 +15,7 @@
     <PackageReference Include="NUnit" Version="3.9.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
     <PackageReference Include="protobuf-net" Version="2.3.2" />
+    <PackageReference Include="RabbitMQ.Client" Version="5.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,6 +25,9 @@
   <ItemGroup>
     <Reference Include="Inceptum.Messaging">
       <HintPath>..\..\..\Messaging\src\Inceptum.Messaging\bin\Debug\netstandard2.0\Inceptum.Messaging.dll</HintPath>
+    </Reference>
+    <Reference Include="Inceptum.Messaging.Castle">
+      <HintPath>..\..\..\Messaging\src\Inceptum.Messaging.Castle\bin\Debug\netstandard2.0\Inceptum.Messaging.Castle.dll</HintPath>
     </Reference>
     <Reference Include="Inceptum.Messaging.RabbitMq">
       <HintPath>..\..\..\Messaging\src\Inceptum.Messaging.RabbitMq\bin\Debug\netstandard2.0\Inceptum.Messaging.RabbitMq.dll</HintPath>
