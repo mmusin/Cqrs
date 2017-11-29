@@ -120,30 +120,34 @@ namespace Inceptum.Cqrs.Tests
                     new MessagingEngine(
                         new TransportResolver(new Dictionary<string, TransportInfo>
                             {
-                                {"InMemory", new TransportInfo("none", "none", "none", null, "InMemory")}
-                            })))
+                                {"rmq", new TransportInfo("amqp://localhost/LKK", "guest", "guest", "None", "RabbitMq")}
+                            }), new RabbitMqTransportFactory()))
             {
                 var commandHandler = new CommandHandler();
                 using (var engine = new CqrsEngine(messagingEngine,
-                                                   Register.DefaultEndpointResolver(new InMemoryEndpointResolver()),
-                                                   Register.BoundedContext("bc1")
-                                                        .PublishingEvents(typeof(int)).With("events1").WithLoopback()
-                                                        .ListeningCommands(typeof(string)).On("commands1").WithLoopback()
-                                                        .WithCommandsHandler<CommandHandler>(),
-                                                   Register.BoundedContext("bc2")
-                                                        .PublishingEvents(typeof(int)).With("events2").WithLoopback()
-                                                        .ListeningCommands(typeof(string)).On("commands2").WithLoopback()
-                                                        .WithCommandsHandler<CommandHandler>(),
-                                                   Register.Saga<TestSaga>("SomeIntegration")
-                                                        .ListeningEvents(typeof(int)).From("bc1").On("events1")
-                                                        .ListeningEvents(typeof(int)).From("bc2").On("events2")
-                                                        .PublishingCommands(typeof(string)).To("bc2").With("commands2")
-                                                        .ProcessingOptions("commands").MultiThreaded(5))
-                    )
-                {
-                    messagingEngine.Send("cmd", new Endpoint("InMemory", "commands1", serializationFormat: "json"));
+                    Register.DefaultEndpointResolver(
+                        new RabbitMqConventionEndpointResolver("rmq", "json", environment: "dev")),
+                    Register.BoundedContext("operations")
+                        .PublishingCommands(typeof(CreateCashOutCommand)).To("lykke-wallet").With("operations-commands")
+                        .ListeningEvents(typeof(CashOutCreatedEvent)).From("lykke-wallet").On("lykke-wallet-events"),
 
-                    Assert.That(TestSaga.Complete.WaitOne(2000), Is.True, "Saga has not got events or failed to send command");
+                    Register.BoundedContext("lykke-wallet")
+                        .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(2).TotalMilliseconds)
+                        .ListeningCommands(typeof(CreateCashOutCommand)).On("operations-commands")
+                        .PublishingEvents(typeof(CashOutCreatedEvent)).With("lykke-wallet-events")
+                        .WithCommandsHandler(commandHandler),
+
+                    Register.Saga<TestSaga>("swift-cashout")
+                        .ListeningEvents(typeof(CashOutCreatedEvent)).From("lykke-wallet").On("lykke-wallet-events"),
+
+                    Register.DefaultRouting.PublishingCommands(typeof(CreateCashOutCommand)).To("lykke-wallet")
+                        .With("operations-commands"))
+                )
+                {
+                    engine.SendCommand(new CreateCashOutCommand { Payload = "test data" }, null, "lykke-wallet");
+
+                    Assert.That(TestSaga.Complete.WaitOne(2000), Is.True,
+                        "Saga has not got events or failed to send command");
                 }
             }
         }
