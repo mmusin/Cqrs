@@ -9,9 +9,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		VersionInfo.cs = VersionInfo.cs
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Inceptum.Cqrs", "Inceptum.Cqrs\Inceptum.Cqrs.csproj", "{5E6D3D86-33B6-4821-9F40-0FCFD4824EA0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lykke.Cqrs", "Lykke.Cqrs\Lykke.Cqrs.csproj", "{5E6D3D86-33B6-4821-9F40-0FCFD4824EA0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inceptum.Cqrs.Tests", "Inceptum.Cqrs.Tests\Inceptum.Cqrs.Tests.csproj", "{D940DFC0-99D1-43D0-89D6-B75198396FBA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lykke.Cqrs.Tests", "Lykke.Cqrs.Tests\Lykke.Cqrs.Tests.csproj", "{D940DFC0-99D1-43D0-89D6-B75198396FBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
