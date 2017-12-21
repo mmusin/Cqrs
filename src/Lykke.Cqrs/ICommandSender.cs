@@ -1,7 +1,6 @@
 ﻿using System;
-using Inceptum.Cqrs.Configuration;
 
-namespace Inceptum.Cqrs
+namespace Lykke.Cqrs
 {
     public interface ICommandSender : IDisposable
     {

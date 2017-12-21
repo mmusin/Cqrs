@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading;
+using Common.Log;
 using Inceptum.Cqrs.Configuration;
 using Inceptum.Cqrs.Routing;
 using Inceptum.Messaging;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
 using Inceptum.Messaging.RabbitMq;
+using Lykke.Cqrs;
+using Lykke.Messaging;
 using Moq;
 using NUnit.Framework;
 
@@ -49,13 +52,14 @@ namespace Inceptum.Cqrs.Tests
             using (
                 var messagingEngine =
                     new MessagingEngine(
+                        new LogToConsole(),
                         new TransportResolver(new Dictionary<string, TransportInfo>
                             {
                                 {"InMemory", new TransportInfo("none", "none", "none", null, "InMemory")}
                             })))
             {
                 var commandHandler = new CommandHandler();
-                using (var engine = new CqrsEngine(messagingEngine,
+                using (var engine = new CqrsEngine(new LogToConsole(), messagingEngine,
                                                    Register.DefaultEndpointResolver(new InMemoryEndpointResolver()),
                                                    Register.BoundedContext("bc")
                                                                       .PublishingEvents(typeof(int)).With("eventExchange")
@@ -81,12 +85,13 @@ namespace Inceptum.Cqrs.Tests
             using (
                 var messagingEngine =
                     new MessagingEngine(
+                        new LogToConsole(),
                         new TransportResolver(new Dictionary<string, TransportInfo>
                             {
                                 {"InMemory", new TransportInfo("none", "none", "none", null, "InMemory")}
                             })))
             {
-                using (var engine = new CqrsEngine(messagingEngine,
+                using (var engine = new CqrsEngine(new LogToConsole(), messagingEngine,
                                                                       Register.DefaultEndpointResolver(new InMemoryEndpointResolver()),
                                                                       Register.BoundedContext("bc2")
                                                                         .PublishingCommands(typeof(int)).To("bc1").With("bcCommands"),
@@ -118,13 +123,14 @@ namespace Inceptum.Cqrs.Tests
             using (
                 var messagingEngine =
                     new MessagingEngine(
+                        new LogToConsole(),
                         new TransportResolver(new Dictionary<string, TransportInfo>
                             {
                                 {"rmq", new TransportInfo("amqp://localhost/LKK", "guest", "guest", "None", "RabbitMq")}
                             }), new RabbitMqTransportFactory()))
             {
                 var commandHandler = new CommandHandler();
-                using (var engine = new CqrsEngine(messagingEngine,
+                using (var engine = new CqrsEngine(new LogToConsole(), messagingEngine,
                     Register.DefaultEndpointResolver(
                         new RabbitMqConventionEndpointResolver("rmq", "json", environment: "dev")),
                     Register.BoundedContext("operations")
@@ -162,6 +168,7 @@ namespace Inceptum.Cqrs.Tests
 
             var messagingEngine =
                 new MessagingEngine(
+                    new LogToConsole(),
                     new TransportResolver(new Dictionary<string, TransportInfo>
                     {
                         {"InMemory", new TransportInfo("none", "none", "none", null, "InMemory")},
@@ -171,7 +178,7 @@ namespace Inceptum.Cqrs.Tests
             {
 
 
-                new CqrsEngine(messagingEngine, endpointProvider.Object,
+                new CqrsEngine(new LogToConsole(), messagingEngine, endpointProvider.Object,
                     Register.BoundedContext("bc")
                         .PublishingCommands(typeof(string)).To("operations").With("operationsCommandsRoute")
                         .ListeningEvents(typeof(int)).From("operations").On("operationEventsRoute")
@@ -218,13 +225,14 @@ namespace Inceptum.Cqrs.Tests
             using (
                 var messagingEngine =
                     new MessagingEngine(
+                        new LogToConsole(),
                         new TransportResolver(new Dictionary<string, TransportInfo>
                             {
                                 {"InMemory", new TransportInfo("none", "none", "none", null, "InMemory")}
                             })))
             {
                 var commandHandler = new CommandHandler(100);
-                using (var engine = new CqrsEngine(messagingEngine, endpointProvider.Object,
+                using (var engine = new CqrsEngine(new LogToConsole(), messagingEngine, endpointProvider.Object,
                                                    Register.DefaultEndpointResolver(new InMemoryEndpointResolver()),
                                                    Register.BoundedContext("bc")
                                                     .PublishingEvents(typeof(int)).With("eventExchange").WithLoopback("eventQueue")

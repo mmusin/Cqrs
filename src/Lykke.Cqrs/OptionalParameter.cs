@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
-using Castle.MicroKernel.Registration;
 
-namespace Inceptum.Cqrs
+namespace Lykke.Cqrs
 {
     //TODO: arrange thid crap
 

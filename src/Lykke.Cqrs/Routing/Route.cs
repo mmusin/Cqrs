@@ -8,6 +8,7 @@ using System.Linq;
 using Inceptum.Messaging;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
+using Lykke.Cqrs;
 
 namespace Inceptum.Cqrs.Routing
 {

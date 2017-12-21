@@ -2,13 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Inceptum.Cqrs.Configuration;
+using Inceptum.Cqrs;
 using Inceptum.Cqrs.Routing;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
-using NLog;
 
-namespace Inceptum.Cqrs
+namespace Lykke.Cqrs
 {
     public interface IRouteMap : IEnumerable<Route>
     {
@@ -85,9 +84,7 @@ namespace Inceptum.Cqrs
 
 
     public class Context : RouteMap, IDisposable, ICommandSender
-    {
-
-        readonly Logger m_Logger = LogManager.GetCurrentClassLogger();
+    {                
         private readonly CqrsEngine m_CqrsEngine;
         private readonly Dictionary<string, Destination> m_TempDestinations = new Dictionary<string, Destination>();
         internal Context(CqrsEngine cqrsEngine, string name, long failedCommandRetryDelay)
@@ -96,12 +93,12 @@ namespace Inceptum.Cqrs
 
 
             if (name.ToLower() == "default")
-                throw new ArgumentException("default is reserved name", "name");
+                throw new ArgumentException("default is reserved name", "name");            
             m_CqrsEngine = cqrsEngine;
             FailedCommandRetryDelay = failedCommandRetryDelay;
             EventsPublisher = new EventsPublisher(cqrsEngine, this);
-            CommandDispatcher = new CommandDispatcher(Name, failedCommandRetryDelay);
-            EventDispatcher = new EventDispatcher(Name);
+            CommandDispatcher = new CommandDispatcher(cqrsEngine.Log, Name, failedCommandRetryDelay);
+            EventDispatcher = new EventDispatcher(cqrsEngine.Log, Name);
             Processes = new List<IProcess>();
         }
 

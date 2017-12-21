@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Inceptum.Cqrs.Configuration.BoundedContext;
 using Inceptum.Cqrs.Configuration.Routing;
 using Inceptum.Cqrs.Configuration.Saga;
+using Lykke.Cqrs;
 
 namespace Inceptum.Cqrs.Configuration
 {

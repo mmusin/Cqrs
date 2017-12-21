@@ -1,10 +1,8 @@
-﻿using System;
-using Inceptum.Cqrs.Configuration;
-using Inceptum.Cqrs.Routing;
+﻿using Inceptum.Cqrs.Routing;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
 
-namespace Inceptum.Cqrs
+namespace Lykke.Cqrs
 {
     public class InMemoryEndpointResolver:IEndpointResolver
     {

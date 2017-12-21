@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
-using Castle.Core.Internal;
-using Inceptum.Cqrs.Configuration;
-using Inceptum.Cqrs.InfrastructureCommands;
+using Common.Log;
+using Inceptum.Cqrs;
 using Inceptum.Messaging.Contract;
-using NLog;
 using ThreadState = System.Threading.ThreadState;
 
-namespace Inceptum.Cqrs
+namespace Lykke.Cqrs
 {
 
     class BatchManager
@@ -23,17 +20,17 @@ namespace Inceptum.Cqrs
         private long m_Counter = 0;
         private readonly int m_BatchSize;
         public long ApplyTimeout { get; private set; }
-        private readonly long m_FailedEventRetryDelay;
-        private readonly Logger m_Logger;
+        private readonly ILog _log;
+        private readonly long m_FailedEventRetryDelay;        
         private readonly Stopwatch m_SinceFirstEvent=new Stopwatch();
         private Func<object> m_BeforeBatchApply;
         private Action<object> m_AfterBatchApply;
 
-        public BatchManager( long failedEventRetryDelay,Logger logger,int batchSize=0, long applyTimeout=0, Func<object> beforeBatchApply=null,Action<object> afterBatchApply=null )
+        public BatchManager(ILog log, long failedEventRetryDelay,int batchSize=0, long applyTimeout=0, Func<object> beforeBatchApply=null,Action<object> afterBatchApply=null )
         {
             m_AfterBatchApply = afterBatchApply??(o=>{});
-            m_BeforeBatchApply = beforeBatchApply ?? (() =>  null );
-            m_Logger = logger;
+            m_BeforeBatchApply = beforeBatchApply ?? (() =>  null );            
+            _log = log;
             m_FailedEventRetryDelay = failedEventRetryDelay;
             ApplyTimeout = applyTimeout;
             m_BatchSize = batchSize;
@@ -113,7 +110,9 @@ namespace Inceptum.Cqrs
             }
             catch (Exception e)
             {
-                m_Logger.WarnException("Failed to handle events batch of type " + origin.EventType.Name, e);
+                _log.WriteErrorAsync(nameof(EventDispatcher), nameof(doHandle),
+                    "Failed to handle events batch of type " + origin.EventType.Name, e);
+                
                 results = @events.Select(x => new CommandHandlingResult {Retry = true, RetryDelay = m_FailedEventRetryDelay}).ToArray();
             }
 
@@ -132,16 +131,17 @@ namespace Inceptum.Cqrs
     internal class EventDispatcher:IDisposable
     {
         readonly Dictionary<EventOrigin, List<Tuple<Func<object[],object, CommandHandlingResult[]>,BatchManager>>> m_Handlers = new Dictionary<EventOrigin, List<Tuple<Func<object[],object, CommandHandlingResult[]>, BatchManager>>>();
+        private readonly ILog _log;
         private readonly string m_BoundedContext;
-        internal static long m_FailedEventRetryDelay = 60000;        
-        readonly Logger m_Logger = LogManager.GetCurrentClassLogger();
+        internal static long m_FailedEventRetryDelay = 60000;                
         readonly ManualResetEvent m_Stop=new ManualResetEvent(false);
         private readonly Thread m_ApplyBatchesThread;
         private readonly BatchManager m_DefaultBatchManager;
 
-        public EventDispatcher(string boundedContext)
+        public EventDispatcher(ILog log, string boundedContext)
         {
-            m_DefaultBatchManager = new BatchManager(m_FailedEventRetryDelay, m_Logger);
+            m_DefaultBatchManager = new BatchManager(log, m_FailedEventRetryDelay);
+            _log = log;
             m_BoundedContext = boundedContext;
             m_ApplyBatchesThread = new Thread(() =>
             {
@@ -174,7 +174,7 @@ namespace Inceptum.Cqrs
             Action<object> afterBatchApplyWrap = afterBatchApply == null ? (Action<object>)null : c => afterBatchApply(o, c); 
             var batchManager = batchSize==0 && applyTimeoutInSeconds==0
                 ?null
-                : new BatchManager(m_FailedEventRetryDelay, m_Logger, batchSize, applyTimeoutInSeconds * 1000, beforeBatchApplyWrap, afterBatchApplyWrap);
+                : new BatchManager(_log, m_FailedEventRetryDelay, batchSize, applyTimeoutInSeconds * 1000, beforeBatchApplyWrap, afterBatchApplyWrap);
             wire(fromBoundedContext, o, batchManager,batchContextType,parameters);
         }
 

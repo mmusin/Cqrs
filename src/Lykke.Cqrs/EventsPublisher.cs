@@ -1,7 +1,7 @@
 ﻿using System;
-using Inceptum.Cqrs.Configuration;
+using Inceptum.Cqrs;
 
-namespace Inceptum.Cqrs
+namespace Lykke.Cqrs
 {
     public class EventsPublisher : IEventPublisher
     {

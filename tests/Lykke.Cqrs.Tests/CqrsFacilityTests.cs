@@ -15,6 +15,7 @@ using Inceptum.Messaging;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
 using Inceptum.Messaging.RabbitMq;
+using Lykke.Cqrs;
 using Moq;
 using NUnit.Framework;
 using ProtoBuf;

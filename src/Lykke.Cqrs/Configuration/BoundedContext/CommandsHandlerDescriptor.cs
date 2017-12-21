@@ -1,4 +1,5 @@
 ﻿using System;
+using Lykke.Cqrs;
 
 namespace Inceptum.Cqrs.Configuration.BoundedContext
 {

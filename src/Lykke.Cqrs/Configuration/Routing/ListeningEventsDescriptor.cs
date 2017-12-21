@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Inceptum.Cqrs.Configuration.Saga;
+using Lykke.Cqrs;
 
 namespace Inceptum.Cqrs.Configuration.Routing
 {

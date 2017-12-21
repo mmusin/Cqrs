@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
 using Inceptum.Cqrs.Routing;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
 
-namespace Inceptum.Cqrs
+namespace Lykke.Cqrs
 {
 
     public enum RouteType

@@ -1,6 +1,6 @@
 using System;
 
-namespace Inceptum.Cqrs
+namespace Lykke.Cqrs
 {
     class EventOrigin
     {

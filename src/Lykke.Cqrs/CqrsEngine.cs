@@ -4,13 +4,13 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Common.Log;
+using Inceptum.Cqrs;
 using Inceptum.Cqrs.Configuration;
-using Inceptum.Cqrs.InfrastructureCommands;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
-using NLog;
 
-namespace Inceptum.Cqrs
+namespace Lykke.Cqrs
 {
     public interface IDependencyResolver
     {
@@ -47,7 +47,7 @@ namespace Inceptum.Cqrs
 
     public class CqrsEngine :ICqrsEngine,IDisposable
     {
-        readonly Logger m_Logger = LogManager.GetCurrentClassLogger();
+        public ILog Log { get; }
         private readonly IMessagingEngine m_MessagingEngine;
         private readonly CompositeDisposable m_Subscription=new CompositeDisposable();
         internal  IEndpointResolver EndpointResolver { get; set; }
@@ -70,25 +70,25 @@ namespace Inceptum.Cqrs
         }
 
 
-        public CqrsEngine(IMessagingEngine messagingEngine,  IEndpointProvider endpointProvider, params IRegistration[] registrations)
-            : this(new DefaultDependencyResolver(), messagingEngine, endpointProvider, registrations)
+        public CqrsEngine(ILog log, IMessagingEngine messagingEngine,  IEndpointProvider endpointProvider, params IRegistration[] registrations)
+            : this(log, new DefaultDependencyResolver(), messagingEngine, endpointProvider, registrations)
         {
         }
 
 
-        public CqrsEngine(IMessagingEngine messagingEngine, params IRegistration[] registrations)
-            : this(new DefaultDependencyResolver(), messagingEngine,   new DefaultEndpointProvider(), registrations)
+        public CqrsEngine(ILog log, IMessagingEngine messagingEngine, params IRegistration[] registrations)
+            : this(log, new DefaultDependencyResolver(), messagingEngine,   new DefaultEndpointProvider(), registrations)
         {
         }
 
-        public CqrsEngine(IDependencyResolver dependencyResolver, IMessagingEngine messagingEngine, IEndpointProvider endpointProvider, params IRegistration[] registrations)
-            : this(dependencyResolver, messagingEngine, endpointProvider, false, registrations)
+        public CqrsEngine(ILog log, IDependencyResolver dependencyResolver, IMessagingEngine messagingEngine, IEndpointProvider endpointProvider, params IRegistration[] registrations)
+            : this(log, dependencyResolver, messagingEngine, endpointProvider, false, registrations)
         {
         }
 
-        public CqrsEngine(IDependencyResolver dependencyResolver, IMessagingEngine messagingEngine, IEndpointProvider endpointProvider, bool createMissingEndpoints, params IRegistration[] registrations)
+        public CqrsEngine(ILog log, IDependencyResolver dependencyResolver, IMessagingEngine messagingEngine, IEndpointProvider endpointProvider, bool createMissingEndpoints, params IRegistration[] registrations)
         {
-            m_Logger.Debug("CqrsEngine instanciating. createMissingEndpoints: "+ createMissingEndpoints);
+            Log = log;
             m_CreateMissingEndpoints = createMissingEndpoints;
             m_DependencyResolver = dependencyResolver;
             m_Registrations = registrations;
@@ -247,9 +247,7 @@ namespace Inceptum.Cqrs
             }
 
             if (!allEndpointsAreValid)
-                throw new ApplicationException(errorMessage.ToString());
-
-            m_Logger.Debug(log);
+                throw new ApplicationException(errorMessage.ToString());            
         }
 
 

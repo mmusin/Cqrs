@@ -5,11 +5,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Castle.Components.DictionaryAdapter;
+using Common.Log;
 using Inceptum.Cqrs.Configuration;
 using Inceptum.Messaging;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
 using Inceptum.Messaging.RabbitMq;
+using Lykke.Cqrs;
+using Lykke.Messaging;
 using Moq;
 using NUnit.Framework;
 
@@ -114,7 +117,7 @@ namespace Inceptum.Cqrs.Tests
         [Test]
         public void WireTest()
         {
-            var dispatcher = new EventDispatcher("testBC");
+            var dispatcher = new EventDispatcher(new LogToConsole(), "testBC");
             var handler = new EventHandler();
             dispatcher.Wire("testBC",handler);
             dispatcher.Dispatch("testBC", "test", (delay, acknowledge) => { });
@@ -125,7 +128,7 @@ namespace Inceptum.Cqrs.Tests
         [Test]
         public void MultipleHandlersDispatchTest()
         {
-            var dispatcher=new EventDispatcher("testBC");
+            var dispatcher=new EventDispatcher(new LogToConsole(), "testBC");
             var handler1 = new EventHandler();
             var handler2 = new EventHandler();
             dispatcher.Wire("testBC",handler1);
@@ -139,7 +142,7 @@ namespace Inceptum.Cqrs.Tests
         [Test]
         public void FailingHandlersDispatchTest()
         {
-            var dispatcher=new EventDispatcher("testBC");
+            var dispatcher=new EventDispatcher(new LogToConsole(), "testBC");
             var handler1 = new EventHandler();
             var handler2 = new EventHandler(true);
             dispatcher.Wire("testBC",handler1);
@@ -155,7 +158,7 @@ namespace Inceptum.Cqrs.Tests
         [Test]
         public void RetryingHandlersDispatchTest()
         {
-            var dispatcher=new EventDispatcher("testBC");
+            var dispatcher=new EventDispatcher(new LogToConsole(), "testBC");
             var handler = new EventHandler();
             dispatcher.Wire("testBC", handler);
             Tuple<long, bool> result=null;
@@ -169,7 +172,7 @@ namespace Inceptum.Cqrs.Tests
         [Test]
         public void BatchDispatchTest()
         {
-            var dispatcher = new EventDispatcher("testBC");
+            var dispatcher = new EventDispatcher(new LogToConsole(), "testBC");
             var handler = new EventHandler();
             dispatcher.Wire("testBC", handler);
             Tuple<long, bool> result = null;
@@ -189,7 +192,7 @@ namespace Inceptum.Cqrs.Tests
         [Test]
         public void BatchDispatchTriggeringBySizeTest()
         {
-            var dispatcher = new EventDispatcher("testBC");
+            var dispatcher = new EventDispatcher(new LogToConsole(), "testBC");
             var handler = new EventHandlerWithBatchSupport();
             dispatcher.Wire("testBC", handler, 3, 0, 
                 typeof(FakeBatchContext),
@@ -216,7 +219,7 @@ namespace Inceptum.Cqrs.Tests
         [Test]
         public void BatchDispatchTriggeringByTimeoutTest()
         {
-            var dispatcher = new EventDispatcher("testBC");
+            var dispatcher = new EventDispatcher(new LogToConsole(), "testBC");
             var handler = new EventHandlerWithBatchSupport();
             dispatcher.Wire("testBC", handler, 3, 1, typeof(FakeBatchContext), h => ((EventHandlerWithBatchSupport)h).OnBatchStart(), (h, c) => ((EventHandlerWithBatchSupport)h).OnBatchFinish((FakeBatchContext)c));
             Tuple<long, bool> result = null;
@@ -239,7 +242,7 @@ namespace Inceptum.Cqrs.Tests
         [Test]
         public void BatchDispatchUnackTest()
         {
-            var dispatcher = new EventDispatcher("testBC");
+            var dispatcher = new EventDispatcher(new LogToConsole(), "testBC");
             var handler = new EventHandlerWithBatchSupport(1);
             dispatcher.Wire("testBC", handler, 3, 0,
                 typeof(FakeBatchContext),
@@ -275,6 +278,7 @@ namespace Inceptum.Cqrs.Tests
             using (
                 var messagingEngine =
                     new MessagingEngine(
+                        new LogToConsole(),
                         new TransportResolver(new Dictionary<string, TransportInfo>
                             {
                                 {"RabbitMq", new TransportInfo("amqp://localhost", "guest", "guest", null, "RabbitMq")}
@@ -286,7 +290,7 @@ namespace Inceptum.Cqrs.Tests
                 endpointProvider.Setup(r => r.Get("route")).Returns(endpoint);
                 endpointProvider.Setup(r => r.Contains("route")).Returns(true);
 
-                using (var engine = new CqrsEngine(new DefaultDependencyResolver(),messagingEngine, endpointProvider.Object,false,
+                using (var engine = new CqrsEngine(new LogToConsole(), new DefaultDependencyResolver(),messagingEngine, endpointProvider.Object,false,
                                                    Register.BoundedContext("bc").ListeningEvents(typeof(DateTime)).From("other").On("route")
                                                    .WithProjection(handler, "other",1,0,
                                                                    h => ((EventHandlerWithBatchSupport)h).OnBatchStart(),

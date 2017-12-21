@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Common.Log;
+using Inceptum.Cqrs;
 using Inceptum.Cqrs.InfrastructureCommands;
 using Inceptum.Messaging.Contract;
-using NLog;
 
-namespace Inceptum.Cqrs
+namespace Lykke.Cqrs
 {
     //TODO[kn]: rename to EventHandlingResult
     public class CommandHandlingResult
@@ -31,11 +32,12 @@ namespace Inceptum.Cqrs
         readonly Dictionary<Type, Func<object, Endpoint,string,CommandHandlingResult>> m_Handlers = new Dictionary<Type, Func<object, Endpoint,string, CommandHandlingResult>>();
         private readonly string m_BoundedContext;
 
-        readonly Logger m_Logger= LogManager.GetCurrentClassLogger();
+        private readonly ILog _log;
         private long m_FailedCommandRetryDelay;
 
-        public CommandDispatcher(string boundedContext, long failedCommandRetryDelay = 60000)
+        public CommandDispatcher(ILog log, string boundedContext, long failedCommandRetryDelay = 60000)
         {
+            _log = log;
             m_FailedCommandRetryDelay = failedCommandRetryDelay;
             m_BoundedContext = boundedContext;
         }
@@ -163,8 +165,8 @@ namespace Inceptum.Cqrs
             Func<object, Endpoint, string, CommandHandlingResult> handler;
             if (!m_Handlers.TryGetValue(command.GetType(), out handler))
             {
-
-                m_Logger.Warn("Failed to handle command {0} in bound context {1}, no handler was registered for it", command, m_BoundedContext);
+                _log.WriteWarningAsync(nameof(CommandDispatcher), nameof(Dispatch), string.Format("Failed to handle command {0} in bound context {1}, no handler was registered for it", command, m_BoundedContext));
+                
                 acknowledge(m_FailedCommandRetryDelay, false);
                 return;
             }
@@ -181,7 +183,9 @@ namespace Inceptum.Cqrs
             }
             catch (Exception e)
             {
-                m_Logger.WarnException("Failed to handle command of type " + (command==null?"null":command.GetType().Name), e);
+                _log.WriteErrorAsync(nameof(CommandDispatcher), nameof(handle),
+                    "Failed to handle command of type " + (command == null ? "null" : command.GetType().Name), e);
+                
                 acknowledge(m_FailedCommandRetryDelay, false);
             }
         }

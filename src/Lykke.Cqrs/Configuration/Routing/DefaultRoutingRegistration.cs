@@ -1,5 +1,6 @@
 using System;
 using Inceptum.Cqrs.Configuration.BoundedContext;
+using Lykke.Cqrs;
 
 namespace Inceptum.Cqrs.Configuration.Routing
 {

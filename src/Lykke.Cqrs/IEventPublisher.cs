@@ -1,4 +1,4 @@
-﻿namespace Inceptum.Cqrs
+﻿namespace Lykke.Cqrs
 {
     public interface IEventPublisher
     {
