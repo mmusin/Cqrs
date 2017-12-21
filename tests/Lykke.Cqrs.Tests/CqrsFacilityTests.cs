@@ -12,7 +12,6 @@ using Inceptum.Cqrs.Configuration;
 using Inceptum.Cqrs.InfrastructureCommands;
 using Inceptum.Cqrs.Routing;
 using Inceptum.Messaging;
-using Inceptum.Messaging.Castle;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
 using Inceptum.Messaging.RabbitMq;

@@ -1,55 +1,61 @@
-# Ignore file for Visual Studio 2008
-
-# use glob syntax
-syntax: glob
-
-
-# Ignore Visual Studio 2008 files
-*.obj
-#*.exe
-#*.pdb
-*.user
+# Global wildcards
 *.aps
-*.pch
-*.vspscc
-*_i.c
-*_p.c
-*.ncb
-*.suo
-*.tlb
-*.tlh
 *.bak
-*.cache
-*.ilk
+*.dll
 *.log
-*.lib
-*.sbr
-*.scc
-[Bb]in
-[Dd]ebug*/
-obj/
-[Rr]elease*/
-_ReSharper*/
-[Tt]est[Rr]esult*
-[Bb]uild[Ll]og.*
-*.[Pp]ublish.xml
-_UpgradeReport_Files*/
-*.ReSharper.*
-*.dotCover
+*.ncb
+*.obj
+*.old
+*.opensdf
+*.orig
+*.pdb
+*.Publish.xml
+*.sdf
+*.sln.cache
+*.suo
+*.tmp
+*.user
+*.lock.json
 
-*.nupkg
-packages
+# Well-known infrastructure folders
+/packages/
+/target/
+**/aspnet_client/
 
-_cache
-_cache\*
+# IDEs
+*[Rr]e[Ss]harper*
+**/.idea/
+**/.metadata/
+**/.settings/
+/[Tt]est[Rr]esults/
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+ipch/
 
-.idea
-.idea\*
+# Visual Studio project upgrade
+[Bb]ackup/
+UpgradeLog*
+_UpgradeReport_Files/
 
+# Operating Systems generated
+.DS_Store
+[Dd]esktop.ini
+[Tt]humbs.db
 
-#wraps
-#wraps\*
-Inceptum.AppServer-*.wrap
-/*syntax: regexp
-^[^\/]*.wrap*/
+#ncrunch
+*.*crunch*
+_NCrunch_*
+
+#publish profiles
+*publish.ps1
+*.pubxml
+*.psm1
+
+#some test
+.vs
+node_modules
+**/launchSettings.json
+**/appsettings.*.json
 

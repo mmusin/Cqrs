@@ -17,12 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Lykke.Messaging">
-      <HintPath>..\..\..\Messaging\src\Lykke.Messaging\bin\Debug\netstandard2.0\Lykke.Messaging.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
 

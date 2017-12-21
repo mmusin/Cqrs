@@ -20,19 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Lykke.Cqrs\Lykke.Cqrs.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Lykke.Messaging">
-      <HintPath>..\..\..\Messaging\src\Lykke.Messaging\bin\Debug\netstandard2.0\Lykke.Messaging.dll</HintPath>
-    </Reference>
-    <Reference Include="Lykke.Messaging.Castle">
-      <HintPath>..\..\..\Messaging\src\Lykke.Messaging.Castle\bin\Debug\netstandard2.0\Lykke.Messaging.Castle.dll</HintPath>
-    </Reference>
-    <Reference Include="Lykke.Messaging.RabbitMq">
-      <HintPath>..\..\..\Messaging\src\Lykke.Messaging.RabbitMq\bin\Debug\netstandard2.0\Lykke.Messaging.RabbitMq.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\..\src\Lykke.Cqrs\Lykke.Cqrs.csproj" />
   </ItemGroup>
 
 </Project>
