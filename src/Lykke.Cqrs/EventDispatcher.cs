@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Common.Log;
 using Inceptum.Cqrs;
 using Inceptum.Messaging.Contract;
@@ -206,7 +207,7 @@ namespace Lykke.Cqrs
                 .Select(m => new {
                     method = m,
                     eventType = m.GetParameters().First().ParameterType,
-                    returnsResult = m.ReturnType == typeof (CommandHandlingResult),
+                    returnsResult = m.ReturnType == typeof (Task<CommandHandlingResult>),
                     isBatch = m.ReturnType == typeof (CommandHandlingResult[]) && m.GetParameters().First().ParameterType.IsArray,
                     callParameters = m.GetParameters().Skip(1).Select(p => new
                     {
