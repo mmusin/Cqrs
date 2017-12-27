@@ -293,7 +293,7 @@ namespace Lykke.Cqrs
             var handleParams = new Expression[] { Expression.Convert(@event, eventType) }
                                     .Concat(optionalParameters.Select(p => p.ValueExpression))
                                     .ToArray();
-            var callHandler = Expression.Call(Expression.Constant(o), "Handle", null, handleParams);
+            var callHandler = Expression.Call(Expression.Call(Expression.Constant(o), "Handle", null, handleParams), "Wait", null);
 
 
             var okResult = Expression.Constant(new CommandHandlingResult { Retry = false, RetryDelay = 0 });
