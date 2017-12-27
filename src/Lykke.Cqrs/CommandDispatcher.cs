@@ -127,7 +127,7 @@ namespace Lykke.Cqrs
                      .Cast<Expression>()
                      .Concat(new[] {
                         Expression.TryFinally(
-                            Expression.Call(Expression.Constant(o), "Handle", null, parameters),
+                            Expression.Call(Expression.Call(Expression.Constant(o), "Handle", null, parameters), "Wait", null),
                             Expression.Block(variables.Select( //dispose variable if disposable and not null
                                 v => Expression.IfThen(
                                         Expression.And(Expression.NotEqual(v.Value, Expression.Constant(null)), Expression.TypeIs(v.Value, disposableType)),
