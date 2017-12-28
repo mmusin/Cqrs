@@ -30,7 +30,7 @@ namespace Lykke.Cqrs
 
     internal class CommandDispatcher:IDisposable
     {
-        readonly Dictionary<Type, Func<object, Endpoint,string, Task<CommandHandlingResult>>> m_Handlers = new Dictionary<Type, Func<object, Endpoint,string, Task<CommandHandlingResult>>>();
+        readonly Dictionary<Type, Func<object, Endpoint,string, CommandHandlingResult>> m_Handlers = new Dictionary<Type, Func<object, Endpoint,string, CommandHandlingResult>>();
         private readonly string m_BoundedContext;
 
         private readonly ILog _log;
@@ -128,7 +128,7 @@ namespace Lykke.Cqrs
                      .Cast<Expression>()
                      .Concat(new[] {
                         Expression.TryFinally(
-                            Expression.Call(Expression.Constant(o), "Handle", null, parameters),
+                            Expression.Property(Expression.Call(Expression.Constant(o), "Handle", null, parameters), "Result", null),
                             Expression.Block(variables.Select( //dispose variable if disposable and not null
                                 v => Expression.IfThen(
                                         Expression.And(Expression.NotEqual(v.Value, Expression.Constant(null)), Expression.TypeIs(v.Value, disposableType)),
@@ -137,22 +137,22 @@ namespace Lykke.Cqrs
                       .Cast<Expression>().DefaultIfEmpty(Expression.Empty())))
                      })
                  );
-
-            Expression<Func<object, Endpoint, string, Task<CommandHandlingResult>>> lambda;
+            
+            Expression<Func<object, Endpoint, string, CommandHandlingResult>> lambda;
             if (returnsResult)
-                lambda = (Expression<Func<object, Endpoint, string, Task<CommandHandlingResult>>>)Expression.Lambda(call, command, endpoint, route);
+                lambda = (Expression<Func<object, Endpoint, string, CommandHandlingResult>>)Expression.Lambda(call, command, endpoint, route);
             else
             {
                 LabelTarget returnTarget = Expression.Label(typeof(Task<CommandHandlingResult>));
-                var returnLabel = Expression.Label(returnTarget,Expression.Constant(Task.FromResult(new CommandHandlingResult { Retry = false, RetryDelay = 0 }))); 
+                var returnLabel = Expression.Label(returnTarget,Expression.Constant(new CommandHandlingResult { Retry = false, RetryDelay = 0 })); 
                 var block = Expression.Block(
                     call,
                     returnLabel);
-                lambda = (Expression<Func<object, Endpoint, string, Task<CommandHandlingResult>>>)Expression.Lambda(block, command, endpoint,route);
+                lambda = (Expression<Func<object, Endpoint, string, CommandHandlingResult>>)Expression.Lambda(block, command, endpoint,route);
             }
 
 
-            Func<object, Endpoint, string, Task<CommandHandlingResult>> handler;
+            Func<object, Endpoint, string, CommandHandlingResult> handler;
             if (m_Handlers.TryGetValue(handledType, out handler))
             {
                 throw new InvalidOperationException(string.Format(
@@ -163,7 +163,7 @@ namespace Lykke.Cqrs
 
         public void Dispatch(object command, AcknowledgeDelegate acknowledge, Endpoint commandOriginEndpoint,string route)
         {
-            Func<object, Endpoint, string, Task<CommandHandlingResult>> handler;
+            Func<object, Endpoint, string, CommandHandlingResult> handler;
             if (!m_Handlers.TryGetValue(command.GetType(), out handler))
             {
                 _log.WriteWarningAsync(nameof(CommandDispatcher), nameof(Dispatch), string.Format("Failed to handle command {0} in bound context {1}, no handler was registered for it", command, m_BoundedContext));
@@ -175,11 +175,11 @@ namespace Lykke.Cqrs
               handle(command, acknowledge, handler,commandOriginEndpoint,route);
         }
 
-        private void handle(object command, AcknowledgeDelegate acknowledge, Func<object, Endpoint, string, Task<CommandHandlingResult>> handler, Endpoint commandOriginEndpoint,string route)
+        private void handle(object command, AcknowledgeDelegate acknowledge, Func<object, Endpoint, string, CommandHandlingResult> handler, Endpoint commandOriginEndpoint,string route)
         {
             try
             {
-                var result = handler(command,commandOriginEndpoint,route).ConfigureAwait(false).GetAwaiter().GetResult();
+                var result = handler(command,commandOriginEndpoint,route);
                 acknowledge(result.RetryDelay, !result.Retry);
             }
             catch (Exception e)
