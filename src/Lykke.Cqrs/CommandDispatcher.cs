@@ -4,8 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
-using Inceptum.Cqrs;
 using Inceptum.Cqrs.InfrastructureCommands;
 using Inceptum.Messaging.Contract;
 
@@ -163,10 +163,9 @@ namespace Lykke.Cqrs
 
         public void Dispatch(object command, AcknowledgeDelegate acknowledge, Endpoint commandOriginEndpoint,string route)
         {
-            Func<object, Endpoint, string, CommandHandlingResult> handler;
-            if (!m_Handlers.TryGetValue(command.GetType(), out handler))
+            if (!m_Handlers.TryGetValue(command.GetType(), out var handler))
             {
-                _log.WriteWarningAsync(nameof(CommandDispatcher), nameof(Dispatch), string.Format("Failed to handle command {0} in bound context {1}, no handler was registered for it", command, m_BoundedContext));
+                _log.WriteWarningAsync(nameof(CommandDispatcher), nameof(Dispatch), $"Failed to handle command {command} in bound context {m_BoundedContext}, no handler was registered for it");
                 
                 acknowledge(m_FailedCommandRetryDelay, false);
                 return;
@@ -185,8 +184,11 @@ namespace Lykke.Cqrs
             catch (Exception e)
             {
                 _log.WriteErrorAsync(nameof(CommandDispatcher), nameof(handle),
-                    "Failed to handle command of type " + (command == null ? "null" : command.GetType().Name), e);
-                
+                    command != null
+                        ? $"Failed to handle command of type {command.GetType().Name}. Command:\r\b{command.ToJson()}"
+                        : "Failed to handle null command",
+                    e);
+
                 acknowledge(m_FailedCommandRetryDelay, false);
             }
         }
