@@ -10,7 +10,7 @@ namespace Lykke.Cqrs
     {
         readonly Dictionary<Tuple<string, RoutingKey>, Endpoint> m_Cache = new Dictionary<Tuple<string, RoutingKey>, Endpoint>();
         private readonly string m_Transport;
-        private string m_SerializationFormat;
+        private readonly string m_SerializationFormat;
         private readonly string m_ExclusiveQueuePostfix;
         private readonly string m_EnvironmentPrefix;
         private readonly string m_CommandsKeyword;
@@ -38,7 +38,6 @@ namespace Lykke.Cqrs
 
         private Endpoint createEndpoint(string route, RoutingKey key)
         {
-            m_SerializationFormat = "protobuf";
             var rmqRoutingKey = key.Priority == 0 ? key.MessageType.Name : key.MessageType.Name + "." + key.Priority;
             var queueName = key.Priority == 0 ? route : route + "." + key.Priority;
             if (key.RouteType == RouteType.Commands && key.CommunicationType == CommunicationType.Subscribe)
