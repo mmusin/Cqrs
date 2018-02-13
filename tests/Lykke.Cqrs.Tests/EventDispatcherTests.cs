@@ -20,7 +20,6 @@ namespace Inceptum.Cqrs.Tests
 {
     class FakeBatchContext
     {
-        
     }
 
     class EventHandlerWithBatchSupport 
@@ -41,7 +40,6 @@ namespace Inceptum.Cqrs.Tests
             return new CommandHandlingResult() {Retry = retry, RetryDelay = 10};
         }
 
-     
         public FakeBatchContext OnBatchStart()
         {
             BatchStartReported = true;
@@ -53,20 +51,18 @@ namespace Inceptum.Cqrs.Tests
         public bool BatchStartReported { get; set; }
         public bool BatchFinishReported { get; set; }
 
-
         public void OnBatchFinish(FakeBatchContext context)
         {
             BatchFinishReported = true;
         }
-    } 
-    
-    class EventHandler 
+    }
+
+    class EventHandler
     {
         public EventHandler(bool fail = false)
         {
             m_Fail = fail;
         }
-         
 
         public readonly List<object> HandledEvents=new List<object>();
         private  bool m_Fail;
@@ -87,9 +83,7 @@ namespace Inceptum.Cqrs.Tests
                 FailOnce = false;
                 throw new Exception();
             }
-        }       
-        
-  
+        }
 
         public CommandHandlingResult[] Handle(int[] e)
         {
@@ -99,21 +93,18 @@ namespace Inceptum.Cqrs.Tests
                 return new CommandHandlingResult {Retry = m_Fail, RetryDelay = 600};
             }).ToArray();
 
-        }    
+        }
+
         public CommandHandlingResult Handle(Exception e)
         {
             HandledEvents.Add(e);
             return new CommandHandlingResult(){Retry = true,RetryDelay = 100};
         }
-
-     
-    }   
-    
+    }
 
     [TestFixture]
     public class EventDispatcherTests
     {
-       
         [Test]
         public void WireTest()
         {
@@ -137,7 +128,6 @@ namespace Inceptum.Cqrs.Tests
             Assert.That(handler1.HandledEvents, Is.EquivalentTo(new[] { "test" }), "Event was not dispatched");
             Assert.That(handler2.HandledEvents, Is.EquivalentTo(new[] { "test" }), "Event was not dispatched");
         }
-
 
         [Test]
         public void FailingHandlersDispatchTest()
@@ -167,7 +157,6 @@ namespace Inceptum.Cqrs.Tests
             Assert.That(result.Item2,Is.False,"fail was not reported");
             Assert.That(result.Item1, Is.EqualTo(100), "fail was not reported");
         }
-
 
         [Test]
         public void BatchDispatchTest()
@@ -235,9 +224,7 @@ namespace Inceptum.Cqrs.Tests
             Assert.That(handler.BatchStartReported, Is.True, "Batch start callback was not called");
             Assert.That(handler.BatchFinishReported, Is.True, "Batch after apply  callback was not called");
             Assert.That(handler.HandledEvents.Select(t => t.Item2), Is.EqualTo(new object[] { handler.LastCreatedBatchContext,  handler.LastCreatedBatchContext }), "Batch context was not the same for all evants in the batch");
-
         }
-
 
         [Test]
         public void BatchDispatchUnackTest()
@@ -273,7 +260,6 @@ namespace Inceptum.Cqrs.Tests
         {
             var handler = new EventHandlerWithBatchSupport(1);
             var endpointProvider = new Mock<IEndpointProvider>();
-           
 
             using (
                 var messagingEngine =

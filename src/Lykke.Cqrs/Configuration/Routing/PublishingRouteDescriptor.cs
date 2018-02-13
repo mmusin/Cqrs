@@ -25,6 +25,5 @@ namespace Inceptum.Cqrs.Configuration.Routing
         public abstract IEnumerable<Type> GetDependencies();
         public abstract void Create(IRouteMap routeMap, IDependencyResolver resolver);
         public abstract void Process(IRouteMap routeMap, CqrsEngine cqrsEngine);
-
     }
 }

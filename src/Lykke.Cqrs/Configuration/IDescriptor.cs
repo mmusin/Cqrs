@@ -15,7 +15,5 @@ namespace Inceptum.Cqrs.Configuration
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         void Process(TSubject subject, CqrsEngine cqrsEngine);
-
     }
-
 }

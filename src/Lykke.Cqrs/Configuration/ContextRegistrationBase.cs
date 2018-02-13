@@ -7,6 +7,7 @@ namespace Inceptum.Cqrs.Configuration
     public abstract class ContextRegistrationBase<TRegistration> : RegistrationBase<TRegistration, Context> where TRegistration : class, IRegistration
     {
         public string Name { get; private set; }
+
         protected ContextRegistrationBase(string name)
         {
             Name = name;
@@ -19,11 +20,7 @@ namespace Inceptum.Cqrs.Configuration
             return context;
         }
 
-       
-
         protected abstract Context CreateContext(CqrsEngine cqrsEngine);
- 
-
 
         public IListeningEventsDescriptor<TRegistration> ListeningEvents(params Type[] types)
         {

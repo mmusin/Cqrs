@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using Inceptum.Cqrs.InfrastructureCommands;
 using Lykke.Cqrs;
 
 namespace Inceptum.Cqrs.Configuration
@@ -13,7 +10,4 @@ namespace Inceptum.Cqrs.Configuration
         void Process(CqrsEngine cqrsEngine);
         IEnumerable<Type> Dependencies { get; }
     }
- 
-    
-
 }

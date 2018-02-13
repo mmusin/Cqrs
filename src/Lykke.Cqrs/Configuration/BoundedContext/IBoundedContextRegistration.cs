@@ -17,7 +17,6 @@ namespace Inceptum.Cqrs.Configuration.BoundedContext
         IListeningRouteDescriptor<ListeningCommandsDescriptor<IBoundedContextRegistration>> ListeningCommands(params Type[] type);
         IPublishingRouteDescriptor<PublishingEventsDescriptor<IBoundedContextRegistration>> PublishingEvents(params Type[] type);
 
-
         ProcessingOptionsDescriptor<IBoundedContextRegistration> ProcessingOptions(string route);
 
         IBoundedContextRegistration WithCommandsHandler(object handler);
@@ -25,12 +24,11 @@ namespace Inceptum.Cqrs.Configuration.BoundedContext
         IBoundedContextRegistration WithCommandsHandlers(params Type[] handlers);
         IBoundedContextRegistration WithCommandsHandler(Type handler);
 
-
         IBoundedContextRegistration WithProjection<TProjection, TBatchContext>(TProjection projection, string fromBoundContext, int batchSize = 0, int applyTimeoutInSeconds = 0, Func<TProjection, TBatchContext> beforeBatchApply = null, Action<TProjection, TBatchContext> afterBatchApply = null);
         IBoundedContextRegistration WithProjection(Type projection, string fromBoundContext, int batchSize = 0, int applyTimeoutInSeconds = 0, Type batchContextType = null, Func<object, object> beforeBatchApply = null, Action<object, object> afterBatchApply = null);
         IBoundedContextRegistration WithProjection(object projection, string fromBoundContext, int batchSize = 0, int applyTimeoutInSeconds = 0, Type batchContextType = null, Func<object, object> beforeBatchApply = null, Action<object, object> afterBatchApply = null);
         IBoundedContextRegistration WithProjection<TProjection, TBatchContext>(string fromBoundContext, int batchSize = 0, int applyTimeoutInSeconds = 0, Func<TProjection, TBatchContext> beforeBatchApply = null, Action<TProjection, TBatchContext> afterBatchApply = null);
-        
+
         IBoundedContextRegistration WithProcess(object process);
         IBoundedContextRegistration WithProcess(Type process);
         IBoundedContextRegistration WithProcess<TProcess>() where TProcess : IProcess;

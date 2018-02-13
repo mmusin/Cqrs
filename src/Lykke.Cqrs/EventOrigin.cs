@@ -2,16 +2,16 @@ using System;
 
 namespace Lykke.Cqrs
 {
-    class EventOrigin
+    internal class EventOrigin
     {
+        public Type EventType { get; private set; }
+        public string BoundedContext { get; private set; }
+
         public EventOrigin(string boundedContext, Type eventType)
         {
             BoundedContext = boundedContext;
             EventType = eventType;
         }
-
-        public Type EventType { get; private  set; }
-        public string BoundedContext { get; private set; }
 
         protected bool Equals(EventOrigin other)
         {

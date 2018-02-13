@@ -4,7 +4,8 @@ using Lykke.Cqrs;
 
 namespace Inceptum.Cqrs.Configuration.Routing
 {
-    public class ProcessingOptionsDescriptor<TRegistrtaion> : RegistrationWrapper<TRegistrtaion>, IDescriptor<IRouteMap> where TRegistrtaion : IRegistration
+    public class ProcessingOptionsDescriptor<TRegistrtaion> : RegistrationWrapper<TRegistrtaion>, IDescriptor<IRouteMap>
+        where TRegistrtaion : IRegistration
     {
         private readonly string m_Route;
         private uint m_ThreadCount;
@@ -38,6 +39,7 @@ namespace Inceptum.Cqrs.Configuration.Routing
             m_ThreadCount = threadCount;
             return this;
         }
+
         public ProcessingOptionsDescriptor<TRegistrtaion> QueueCapacity(uint queueCapacity)
         {
             m_QueueCapacity = queueCapacity;

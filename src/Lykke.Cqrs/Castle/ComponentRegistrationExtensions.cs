@@ -7,16 +7,22 @@ namespace Castle.MicroKernel.Registration
 {
     public static class ComponentRegistrationExtensions
     {
-        public static ComponentRegistration<TProjection> AsProjection<TProjection, TBatchContext>(this ComponentRegistration<TProjection> registration, string hostingBoundContext,
-            string projectedBoundContext, int batchSize = 0, int applyTimeoutInSeconds = 0
-            , Func<TProjection, TBatchContext> beforeBatchApply = null, Action<TProjection, TBatchContext> afterBatchApply = null) where TProjection : class
+        public static ComponentRegistration<TProjection> AsProjection<TProjection, TBatchContext>(
+            this ComponentRegistration<TProjection> registration,
+            string hostingBoundContext,
+            string projectedBoundContext,
+            int batchSize = 0,
+            int applyTimeoutInSeconds = 0,
+            Func<TProjection, TBatchContext> beforeBatchApply = null,
+            Action<TProjection, TBatchContext> afterBatchApply = null)
+            where TProjection : class
         {
-            Func<object, object> before = beforeBatchApply==null
-                    ?(Func<object, object>) null
-                    : p=> beforeBatchApply((TProjection)p);
-            Action<object, object> after =afterBatchApply==null
-                ?(Action<object, object>) null
-                :(p,c)=> afterBatchApply((TProjection)p,(TBatchContext)c);
+            Func<object, object> before = beforeBatchApply == null
+                    ? (Func<object, object>) null
+                    : p => beforeBatchApply((TProjection)p);
+            Action<object, object> after = afterBatchApply == null
+                ? (Action<object, object>) null
+                : (p, c) => afterBatchApply((TProjection)p, (TBatchContext)c);
 
             return registration.ExtendedProperties(new
                 {
@@ -27,16 +33,18 @@ namespace Castle.MicroKernel.Registration
                     ApplyTimeoutInSeconds = applyTimeoutInSeconds,
                     BeforeBatchApply = before,
                     AfterBatchApply = after,
-                    BatchContextType= typeof(TBatchContext)
-
+                    BatchContextType = typeof(TBatchContext)
                 });
-        }        
-        
-        public static ComponentRegistration<TProjection> AsProjection<TProjection>(this ComponentRegistration<TProjection> registration, string hostingBoundContext,
-            string projectedBoundContext, int batchSize = 0, int applyTimeoutInSeconds = 0) where TProjection : class
-        {
-          
+        }
 
+        public static ComponentRegistration<TProjection> AsProjection<TProjection>(
+            this ComponentRegistration<TProjection> registration,
+            string hostingBoundContext,
+            string projectedBoundContext,
+            int batchSize = 0,
+            int applyTimeoutInSeconds = 0)
+            where TProjection : class
+        {
             return registration.ExtendedProperties(new
                 {
                     IsProjection = true,
@@ -46,8 +54,7 @@ namespace Castle.MicroKernel.Registration
                     ApplyTimeoutInSeconds = applyTimeoutInSeconds,
                     BeforeBatchApply = ( Func<object, object>)null,
                     AfterBatchApply = (Action<object, object>)null,
-                    BatchContextType= (Type)null
-
+                    BatchContextType = (Type)null
                 });
         }
 
@@ -59,7 +66,6 @@ namespace Castle.MicroKernel.Registration
                     IsCommandsHandler = true
                 });
         }
-     
 
         public static ComponentRegistration<T> AsProcess<T>(this ComponentRegistration<T> registration, string hostingBoundContext) where T : class
         {
@@ -69,7 +75,6 @@ namespace Castle.MicroKernel.Registration
                     IsProcess = true
                 });
         }
-
 
         public static ComponentRegistration<T> WithRepositoryAccess<T>(this ComponentRegistration<T> registration, string localBoundedContext) where T : class
         {

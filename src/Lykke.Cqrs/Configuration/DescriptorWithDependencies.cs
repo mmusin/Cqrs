@@ -19,7 +19,6 @@ namespace Inceptum.Cqrs.Configuration
         {
             m_Dependedncies = dependencies;
             m_ResolveDependedncies = dependencies.Select;
-
         }
 
         public IEnumerable<Type> GetDependencies()
@@ -29,7 +28,6 @@ namespace Inceptum.Cqrs.Configuration
 
         public void Create(TSubject subject, IDependencyResolver resolver)
         {
-           
             ResolvedDependencies = m_ResolveDependedncies(resolver.GetService);
             Create(subject);
         }
@@ -38,14 +36,10 @@ namespace Inceptum.Cqrs.Configuration
 
         protected virtual void Create(TSubject subject)
         {
-            
         }
 
         public virtual void Process(TSubject subject, CqrsEngine cqrsEngine)
         {
-            
         }
-
-
     }
 }

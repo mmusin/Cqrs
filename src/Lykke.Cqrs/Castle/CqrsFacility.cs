@@ -20,27 +20,6 @@ namespace Inceptum.Cqrs.Castle
         void Start();
     }
 
-    internal class CastleDependencyResolver : IDependencyResolver
-    {
-        private readonly IKernel m_Kernel;
-
-        public CastleDependencyResolver(IKernel kernel)
-        {
-            if (kernel == null) throw new ArgumentNullException("kernel");
-            m_Kernel = kernel;
-        }
-
-        public object GetService(Type type)
-        {
-            return m_Kernel.Resolve(type);
-        }
-
-        public bool HasService(Type type)
-        {
-            return m_Kernel.HasComponent(type);
-        }
-    }
-
     public class CqrsFacility : AbstractFacility, ICqrsEngineBootstrapper
     {
         private readonly string m_EngineComponetName = Guid.NewGuid().ToString();
@@ -66,8 +45,8 @@ namespace Inceptum.Cqrs.Castle
         protected override void Init()
         {
             Kernel.Register(Component.For<ICqrsEngineBootstrapper>().Instance(this));
-            Kernel.ComponentRegistered += onComponentRegistered;
-            Kernel.HandlersChanged += (ref bool changed) => processWaitList();
+            Kernel.ComponentRegistered += OnComponentRegistered;
+            Kernel.HandlersChanged += (ref bool changed) => ProcessWaitList();
         }
 
         public CqrsFacility CreateMissingEndpoints(bool createMissingEndpoints = true)
@@ -76,8 +55,7 @@ namespace Inceptum.Cqrs.Castle
             return this;
         }
 
-
-        private void processWaitList()
+        private void ProcessWaitList()
         {
             foreach (var pair in m_WaitList.ToArray().Where(pair => pair.Key.CurrentState == HandlerState.Valid && pair.Key.TryResolve(CreationContext.CreateEmpty()) != null))
             {
@@ -86,10 +64,8 @@ namespace Inceptum.Cqrs.Castle
             }
         }
 
-
-
         [MethodImpl(MethodImplOptions.Synchronized)]
-        private void onComponentRegistered(string key, IHandler handler)
+        private void OnComponentRegistered(string key, IHandler handler)
         {
             if (handler.ComponentModel.Name == m_EngineComponetName)
             {
@@ -101,56 +77,61 @@ namespace Inceptum.Cqrs.Castle
                 return;
             }
 
-            var isCommandsHandler = (bool)(handler.ComponentModel.ExtendedProperties["IsCommandsHandler"] ?? false);
-            var isProjection = (bool)(handler.ComponentModel.ExtendedProperties["IsProjection"] ?? false);
-            var isProcess = (bool)(handler.ComponentModel.ExtendedProperties["isProcess"] ?? false);
-            var dependsOnBoundedContextRepository = handler.ComponentModel.ExtendedProperties["dependsOnBoundedContextRepository"];
+            var extendedProps = handler.ComponentModel.ExtendedProperties;
+
+            var dependsOnBoundedContextRepository = extendedProps["dependsOnBoundedContextRepository"];
             if (dependsOnBoundedContextRepository != null)
             {
                 handler.ComponentModel.Dependencies.Add(new DependencyModel(m_EngineComponetName, typeof(ICqrsEngine), false));
                 return;
             }
 
+            var isCommandsHandler = (bool)(extendedProps["IsCommandsHandler"] ?? false);
+            var isProjection = (bool)(extendedProps["IsProjection"] ?? false);
             if (isCommandsHandler && isProjection)
                 throw new InvalidOperationException("Component can not be projection and commands handler simultaneousely");
 
             if (isProjection)
             {
-                var projectedBoundContext = (string)(handler.ComponentModel.ExtendedProperties["ProjectedBoundContext"]);
-                var boundContext = (string)(handler.ComponentModel.ExtendedProperties["BoundContext"]);
+                var projectedBoundContext = (string)(extendedProps["ProjectedBoundContext"]);
+                var boundContext = (string)(extendedProps["BoundContext"]);
 
-                var registration = findBoundedContext(boundContext);
+                var registration = FindBoundedContext(boundContext);
                 if (registration == null)
                     throw new ComponentRegistrationException(string.Format("Bounded context {0} was not registered", boundContext));
 
-
-                var batchSize = (int)(handler.ComponentModel.ExtendedProperties["BatchSize"]);
-                var applyTimeoutInSeconds = (int)(handler.ComponentModel.ExtendedProperties["ApplyTimeoutInSeconds"]);
-                var beforeBatchApply = (Func<object, object>)(handler.ComponentModel.ExtendedProperties["BeforeBatchApply"]);
-                var afterBatchApply = (Action<object,object>)(handler.ComponentModel.ExtendedProperties["AfterBatchApply"]);
-                var batchContextType = (Type)(handler.ComponentModel.ExtendedProperties["BatchContextType"]);
+                var batchSize = (int)(extendedProps["BatchSize"]);
+                var applyTimeoutInSeconds = (int)(extendedProps["ApplyTimeoutInSeconds"]);
+                var beforeBatchApply = (Func<object, object>)(extendedProps["BeforeBatchApply"]);
+                var afterBatchApply = (Action<object,object>)(extendedProps["AfterBatchApply"]);
+                var batchContextType = (Type)(extendedProps["BatchContextType"]);
 
                 //TODO: decide which service to use
-                registration.WithProjection(handler.ComponentModel.Services.First(), projectedBoundContext, batchSize, applyTimeoutInSeconds,batchContextType, beforeBatchApply, afterBatchApply);
-
+                registration.WithProjection(
+                    handler.ComponentModel.Services.First(),
+                    projectedBoundContext,
+                    batchSize,
+                    applyTimeoutInSeconds,
+                    batchContextType,
+                    beforeBatchApply,
+                    afterBatchApply);
             }
-
 
             if (isCommandsHandler)
             {
-                var commandsHandlerFor = (string)(handler.ComponentModel.ExtendedProperties["CommandsHandlerFor"]);
-                var registration = findBoundedContext(commandsHandlerFor);
+                var commandsHandlerFor = (string)(extendedProps["CommandsHandlerFor"]);
+                var registration = FindBoundedContext(commandsHandlerFor);
                 if (registration == null)
                     throw new ComponentRegistrationException(string.Format("Bounded context {0} was not registered", commandsHandlerFor));
 
                 registration.WithCommandsHandler(handler.ComponentModel.Services.First());
-
             }
 
+            var isProcess = (bool)(extendedProps["isProcess"] ?? false);
             if (isProcess)
             {
-                var processFor = (string)(handler.ComponentModel.ExtendedProperties["ProcessFor"]);
-                var registration = findBoundedContext(processFor);
+                var processFor = (string)(extendedProps["ProcessFor"]);
+                var registration = FindBoundedContext(processFor);
 
                 if (registration == null)
                     throw new ComponentRegistrationException(string.Format("Bounded context {0} was not registered", processFor));
@@ -159,11 +140,14 @@ namespace Inceptum.Cqrs.Castle
             }
         }
 
-        private IBoundedContextRegistration findBoundedContext(string name)
+        private IBoundedContextRegistration FindBoundedContext(string name)
         {
-
-            return m_BoundedContexts.Where(r => r is IBoundedContextRegistration).Cast<IBoundedContextRegistration>()
-                .Concat(m_BoundedContexts.Where(r => r is IRegistrationWrapper<IBoundedContextRegistration>).Select(r => (r as IRegistrationWrapper<IBoundedContextRegistration>).Registration))
+            return m_BoundedContexts
+                .Where(r => r is IBoundedContextRegistration)
+                .Cast<IBoundedContextRegistration>()
+                .Concat(m_BoundedContexts
+                    .Where(r => r is IRegistrationWrapper<IBoundedContextRegistration>)
+                    .Select(r => (r as IRegistrationWrapper<IBoundedContextRegistration>).Registration))
                 .FirstOrDefault(bc => bc.Name == name);
         }
 
@@ -173,65 +157,14 @@ namespace Inceptum.Cqrs.Castle
                 ? Component.For<ICqrsEngine>().ImplementedBy<InMemoryCqrsEngine>()
                 : Component.For<ICqrsEngine>().ImplementedBy<CqrsEngine>().DependsOn(new { createMissingEndpoints = m_CreateMissingEndpoints });
             Kernel.Register(Component.For<IDependencyResolver>().ImplementedBy<CastleDependencyResolver>());
-            
+
             Kernel.Register(engineReg.Named(m_EngineComponetName).DependsOn(new
             {
                 registrations = m_BoundedContexts.ToArray()
             }));
-            Kernel.Register(
-                  Component.For<ICommandSender>().ImplementedBy<CommandSender>().DependsOn(new { kernel = Kernel }));
+            Kernel.Register(Component.For<ICommandSender>().ImplementedBy<CommandSender>().DependsOn(new { kernel = Kernel }));
 
             m_CqrsEngine = Kernel.Resolve<ICqrsEngine>();
-        }        
-    }
-
-
-
-
-    //TODO: should be injected by cqrs with preset local BC
-    class CommandSender : ICommandSender
-    {
-        private ICqrsEngine m_Engine;
-        private IKernel m_Kernel;
-        private object m_SyncRoot = new object();
-
-        public CommandSender(IKernel kernel)
-        {
-            m_Kernel = kernel;
         }
-
-        private ICqrsEngine CqrsEngine
-        {
-            get
-            {
-                if (m_Engine == null)
-                {
-                    lock (m_SyncRoot)
-                    {
-                        if (m_Engine == null)
-                        {
-                            m_Engine = m_Kernel.Resolve<ICqrsEngine>();
-                        }
-                    }
-                }
-                return m_Engine;
-            }
-        }
-
-        public void Dispose()
-        {
-        }
-
-
-
-        public void SendCommand<T>(T command, string boundedContext, string remoteBoundedContext, uint priority = 0)
-        {
-            CqrsEngine.SendCommand(command, boundedContext, remoteBoundedContext, priority);
-        }
-        
-        public void SendCommand<T>(T command, string remoteBoundedContext, uint priority = 0)
-        {
-            CqrsEngine.SendCommand(command, null, remoteBoundedContext, priority);
-        }        
     }
 }

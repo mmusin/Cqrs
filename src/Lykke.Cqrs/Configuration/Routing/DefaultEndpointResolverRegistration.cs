@@ -28,12 +28,10 @@ namespace Inceptum.Cqrs.Configuration.Routing
             }
 
             cqrsEngine.EndpointResolver = m_Resolver;
-            
         }
 
         public void Process(CqrsEngine cqrsEngine)
         {
-           
         }
 
         public IEnumerable<Type> Dependencies { get; private set; }

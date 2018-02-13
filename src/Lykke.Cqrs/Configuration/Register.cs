@@ -9,7 +9,7 @@ namespace Inceptum.Cqrs.Configuration
     {
         public static ISagaRegistration Saga<TSaga>(string name)
         {
-            return new SagaRegistration(name,typeof(TSaga));
+            return new SagaRegistration(name, typeof(TSaga));
         }
 
         public static IBoundedContextRegistration BoundedContext(string name)
@@ -26,6 +26,7 @@ namespace Inceptum.Cqrs.Configuration
         {
             return new DefaultEndpointResolverRegistration(resolver);
         }
+
         public static DefaultEndpointResolverRegistration DefaultEndpointResolver<TResolver>() 
             where TResolver: IEndpointResolver 
         {

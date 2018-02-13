@@ -1,5 +1,4 @@
 ﻿using System;
-using Inceptum.Cqrs;
 
 namespace Lykke.Cqrs
 {
@@ -19,6 +18,5 @@ namespace Lykke.Cqrs
             if (@event == null) throw new ArgumentNullException("event");
             m_CqrsEngine.PublishEvent(@event, m_Context.Name);
         }
- 
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Inceptum.Cqrs.Configuration.BoundedContext;
 using Inceptum.Cqrs.Configuration.Routing;
-using Inceptum.Cqrs.InfrastructureCommands;
 
 namespace Inceptum.Cqrs.Configuration
 {
@@ -18,6 +17,6 @@ namespace Inceptum.Cqrs.Configuration
             route = route ?? descriptor.Route;
             IRegistrationWrapper<IBoundedContextRegistration> wrapper = descriptor;
             return descriptor.ListeningEvents(descriptor.Types).From(wrapper.Registration.Name).On(route);
-        }        
+        }
     }
 }

@@ -15,7 +15,6 @@ namespace Inceptum.Cqrs.Configuration.Routing
     {
         private string m_BoundedContext;
         private readonly Type[] m_CommandsTypes;
-       
 
         public PublishingCommandsDescriptor(TRegistration registration, Type[] commandsTypes):base(registration)
         {
@@ -42,7 +41,7 @@ namespace Inceptum.Cqrs.Configuration.Routing
 
         public override void Create(IRouteMap routeMap, IDependencyResolver resolver)
         {
-                 foreach (var type in m_CommandsTypes)
+            foreach (var type in m_CommandsTypes)
             {
                 if (LowestPriority > 0)
                 {
@@ -54,11 +53,9 @@ namespace Inceptum.Cqrs.Configuration.Routing
                 else
                 {
                     routeMap[Route].AddPublishedCommand(type, 0, m_BoundedContext, EndpointResolver);
-
                 }
             }
         }
-
 
         public override void Process(IRouteMap routeMap, CqrsEngine cqrsEngine)
         {
