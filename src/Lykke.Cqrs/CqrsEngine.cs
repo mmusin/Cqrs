@@ -4,13 +4,11 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.DataContracts;
-using Microsoft.ApplicationInsights.Extensibility;
 using Common.Log;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
 using Lykke.Cqrs.Configuration;
+using Lykke.Cqrs.Utils;
 
 namespace Lykke.Cqrs
 {
@@ -23,7 +21,6 @@ namespace Lykke.Cqrs
         private readonly IRegistration[] m_Registrations;
         private readonly IDependencyResolver m_DependencyResolver;
         private readonly bool m_CreateMissingEndpoints;
-        protected readonly TelemetryClient _telemetry = new TelemetryClient();
 
         protected IMessagingEngine MessagingEngine
         {
@@ -315,8 +312,8 @@ namespace Lykke.Cqrs
                     throw new ArgumentException(string.Format("bound context {0} not found", context), "context");
                 }
             }
-            var telemtryOperation = InitTelemetryOperation(
-                routeType == RouteType.Commands ? "Cqrs command" : "Cqrs event",
+            var telemtryOperation = TelemetryHelper.InitTelemetryOperation(
+                routeType == RouteType.Commands ? "Cqrs send command" : "Cqrs publish event",
                 type.Name,
                 context,
                 remoteBoundedContext);
@@ -329,13 +326,12 @@ namespace Lykke.Cqrs
             }
             catch (Exception e)
             {
-                telemtryOperation.Telemetry.Success = false;
-                _telemetry.TrackException(e);
+                TelemetryHelper.SubmitException(telemtryOperation, e);
                 throw;
             }
             finally
             {
-                _telemetry.StopOperation(telemtryOperation);
+                TelemetryHelper.SubmitOperationResult(telemtryOperation);
             }
         }
 
@@ -345,20 +341,5 @@ namespace Lykke.Cqrs
             m_MessagingEngine.Send(@event, endpoint, processingGroup,headers);
         }
         */
-
-        private IOperationHolder<DependencyTelemetry> InitTelemetryOperation(
-            string type,
-            string target,
-            string name,
-            string data)
-        {
-            var operation = _telemetry.StartOperation<DependencyTelemetry>(name);
-            operation.Telemetry.Type = type;
-            operation.Telemetry.Target = target;
-            operation.Telemetry.Name = name;
-            operation.Telemetry.Data = data;
-
-            return operation;
-        }
     }
 }

@@ -19,7 +19,7 @@ namespace Lykke.Cqrs
         private readonly ILog _log;
         private readonly string m_BoundedContext;
         internal static long m_FailedEventRetryDelay = 60000;
-        readonly ManualResetEvent m_Stop=new ManualResetEvent(false);
+        readonly ManualResetEvent m_Stop = new ManualResetEvent(false);
         private readonly Thread m_ApplyBatchesThread;
         private readonly BatchManager m_DefaultBatchManager;
 
@@ -32,15 +32,15 @@ namespace Lykke.Cqrs
             {
                 while (!m_Stop.WaitOne(1000))
                 {
-                    applyBatches();
+                    ApplyBatches();
                 }
             });
             m_ApplyBatchesThread.Name = string.Format("'{0}' bounded context batch event processing thread",boundedContext);
         }
 
-        private void applyBatches(bool force=false)
+        private void ApplyBatches(bool force = false)
         {
-            foreach (var batchManager in m_Handlers.SelectMany(h=>h.Value.Select(_=>_.Item2)))
+            foreach (var batchManager in m_Handlers.SelectMany(h => h.Value.Select(_ => _.Item2)))
             {
                 batchManager.ApplyBatchIfRequired(force);
             }
@@ -48,7 +48,6 @@ namespace Lykke.Cqrs
 
         public void Wire(string fromBoundedContext,object o, params OptionalParameterBase[] parameters)
         {
-
             //TODO: decide whet to pass as context here
             Wire(fromBoundedContext, o, null, null, parameters);
         }
@@ -64,7 +63,7 @@ namespace Lykke.Cqrs
             params OptionalParameterBase[] parameters)
         {
             Func<object> beforeBatchApplyWrap = beforeBatchApply == null ? (Func<object>)null : () => beforeBatchApply(o);
-            Action<object> afterBatchApplyWrap = afterBatchApply == null ? (Action<object>)null : c => afterBatchApply(o, c); 
+            Action<object> afterBatchApplyWrap = afterBatchApply == null ? (Action<object>)null : c => afterBatchApply(o, c);
             var batchManager = batchSize == 0 && applyTimeoutInSeconds == 0
                 ? null
                 : new BatchManager(
@@ -131,7 +130,7 @@ namespace Lykke.Cqrs
                 List<Tuple<Func<object[],object, CommandHandlingResult[]>, BatchManager>> handlersList;
                 if (!m_Handlers.TryGetValue(key, out handlersList))
                 {
-                    handlersList = new List<Tuple<Func<object[],object, CommandHandlingResult[]>, BatchManager>>();
+                    handlersList = new List<Tuple<Func<object[], object, CommandHandlingResult[]>, BatchManager>>();
                     m_Handlers.Add(key, handlersList);
                 }
 
@@ -140,13 +139,13 @@ namespace Lykke.Cqrs
                     throw new InvalidOperationException(string.Format("{0} type can not be registered as event handler. Method {1} contains non injectable parameters:{2}",
                         o.GetType().Name,
                         method.method,
-                        string.Join(", ",notInjectableParameters))); 
+                        string.Join(", ", notInjectableParameters)));
 
-                var handler=method.isBatch
+                var handler = method.isBatch
                     ? CreateBatchHandler(eventType, o, method.callParameters.Select(p => p.optionalParameter), batchContextParameter)
                     : CreateHandler(eventType, o, method.callParameters.Select(p => p.optionalParameter), method.returnsResult, batchContextParameter);
-                
-                handlersList.Add(Tuple.Create(handler,batchManager??m_DefaultBatchManager));
+
+                handlersList.Add(Tuple.Create(handler, batchManager ?? m_DefaultBatchManager));
             }
         }
 
@@ -259,13 +258,12 @@ namespace Lykke.Cqrs
             return @foreach;
         }
 
-        public void Dispatch(string fromBoundedContext, IEnumerable<Tuple<object,AcknowledgeDelegate>> events)
+        public void Dispatch(string fromBoundedContext, IEnumerable<Tuple<object, AcknowledgeDelegate>> events)
         {
-            foreach (var e in events.GroupBy(e=>new EventOrigin(fromBoundedContext,e.Item1.GetType())))
+            foreach (var e in events.GroupBy(e => new EventOrigin(fromBoundedContext, e.Item1.GetType())))
             {
-                Dispatch(e.Key,e.ToArray());
+                Dispatch(e.Key, e.ToArray());
             }
-
         }
 
         //TODO: delete
@@ -276,7 +274,7 @@ namespace Lykke.Cqrs
 
         private void Dispatch(EventOrigin origin, Tuple<object, AcknowledgeDelegate>[] events)
         {
-            List<Tuple<Func<object[],object, CommandHandlingResult[]>, BatchManager>> list;
+            List<Tuple<Func<object[], object, CommandHandlingResult[]>, BatchManager>> list;
 
             if (events == null)
             {
@@ -297,8 +295,8 @@ namespace Lykke.Cqrs
             foreach (var grouping in handlersByBatchManager)
             {
                 var batchManager = grouping.Key;
-                var handlers = grouping.Select(h=>h.Item1).ToArray();
-                batchManager.Handle(handlers, events,origin);
+                var handlers = grouping.Select(h => h.Item1).ToArray();
+                batchManager.Handle(handlers, events, origin);
             }
         }
 
@@ -308,7 +306,7 @@ namespace Lykke.Cqrs
                 return;
             m_Stop.Set();
             m_ApplyBatchesThread.Join();
-            applyBatches(true);
+            ApplyBatches(true);
         }
     }
 }

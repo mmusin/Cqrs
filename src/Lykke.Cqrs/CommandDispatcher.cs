@@ -8,16 +8,17 @@ using Common;
 using Common.Log;
 using Inceptum.Messaging.Contract;
 using Lykke.Cqrs.InfrastructureCommands;
+using Lykke.Cqrs.Utils;
 
 namespace Lykke.Cqrs
 {
     internal class CommandDispatcher : IDisposable
     {
-        readonly Dictionary<Type, Func<object, Endpoint, string, CommandHandlingResult>> m_Handlers =
+        private readonly Dictionary<Type, Func<object, Endpoint, string, CommandHandlingResult>> m_Handlers =
             new Dictionary<Type, Func<object, Endpoint,string, CommandHandlingResult>>();
         private readonly string m_BoundedContext;
-
         private readonly ILog _log;
+
         private long m_FailedCommandRetryDelay;
 
         public CommandDispatcher(ILog log, string boundedContext, long failedCommandRetryDelay = 60000)
@@ -168,7 +169,12 @@ namespace Lykke.Cqrs
                 return;
             }
 
-            Handle(command, acknowledge, handler,commandOriginEndpoint,route);
+            Handle(
+                command,
+                acknowledge,
+                handler,
+                commandOriginEndpoint,
+                route);
         }
 
         private void Handle(
@@ -178,9 +184,16 @@ namespace Lykke.Cqrs
             Endpoint commandOriginEndpoint,
             string route)
         {
+            string commandType = command.GetType().Name;
+            var telemtryOperation = TelemetryHelper.InitTelemetryOperation(
+                "Cqrs handle command",
+                commandType,
+                route,
+                commandOriginEndpoint.ToString());
+            bool isFailed = false;
             try
             {
-                var result = handler(command,commandOriginEndpoint,route);
+                var result = handler(command, commandOriginEndpoint, route);
                 acknowledge(result.RetryDelay, !result.Retry);
             }
             catch (Exception e)
@@ -189,11 +202,20 @@ namespace Lykke.Cqrs
                     nameof(CommandDispatcher),
                     nameof(Handle),
                     command != null
-                        ? $"Failed to handle command of type {command.GetType().Name}. Command:\r\b{command.ToJson()}"
+                        ? $"Failed to handle command of type {commandType}. Command:\r\b{command.ToJson()}"
                         : "Failed to handle null command",
                     e);
 
                 acknowledge(m_FailedCommandRetryDelay, false);
+
+                TelemetryHelper.SubmitException(telemtryOperation, e);
+
+                isFailed = true;
+            }
+            finally
+            {
+                if (!isFailed)
+                    TelemetryHelper.SubmitOperationResult(telemtryOperation);
             }
         }
 

@@ -47,7 +47,7 @@ namespace Lykke.Cqrs
 
             if (m_BatchSize == 0 && ApplyTimeout == 0)
             {
-                DoHandle(handlers, events, origin,null);
+                DoHandle(handlers, events, origin, null);
                 return;
             }
 
@@ -92,7 +92,7 @@ namespace Lykke.Cqrs
         }
 
         private void DoHandle(
-            Func<object[],object, CommandHandlingResult[]>[] handlers,
+            Func<object[], object, CommandHandlingResult[]>[] handlers,
             Tuple<object, AcknowledgeDelegate>[] events,
             EventOrigin origin,
             object batchContext)
@@ -104,19 +104,21 @@ namespace Lykke.Cqrs
                 var eventsArray = @events.Select(e => e.Item1).ToArray();
                 var handleResults = handlers.Select(h => h(eventsArray, batchContext)).ToArray();
 
-                results = Enumerable.Range(0, eventsArray.Length).Select(i => handleResults.Select(r => r[i]).ToArray())
-                .Select(r=>
-                {
-                    var retry = r.Any(res=>res.Retry);
-                    return new CommandHandlingResult()
+                results = Enumerable
+                    .Range(0, eventsArray.Length)
+                    .Select(i =>
                     {
-                        Retry = retry,
-                        RetryDelay = r.Where(res => !retry || res.Retry).Min(res => res.RetryDelay)
-                    };
-                }).ToArray();
+                        var r = handleResults.Select(h => h[i]).ToArray();
+                        var retry = r.Any(res => res.Retry);
+                        return new CommandHandlingResult()
+                        {
+                            Retry = retry,
+                            RetryDelay = r.Where(res => !retry || res.Retry).Min(res => res.RetryDelay)
+                        };
+                    })
+                    .ToArray();
 
-             
-                //TODO: verify number of reults matches nuber of events
+                //TODO: verify number of results matches number of events
             }
             catch (Exception e)
             {
