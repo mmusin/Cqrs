@@ -116,6 +116,5 @@ namespace Inceptum.Cqrs.Configuration
         }
 
         #endregion
-
     }
 }

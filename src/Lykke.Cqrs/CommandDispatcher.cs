@@ -27,11 +27,11 @@ namespace Lykke.Cqrs
             m_BoundedContext = boundedContext;
         }
 
-        public void Wire(object o, params OptionalParameter[] parameters)
+        public void Wire(object o, params OptionalParameterBase[] parameters)
         {
             if (o == null) throw new ArgumentNullException("o");
             parameters = parameters
-                .Concat(new OptionalParameter[] { new OptionalParameter<string>("boundedContext", m_BoundedContext) })
+                .Concat(new OptionalParameterBase[] { new OptionalParameter<string>("boundedContext", m_BoundedContext) })
                 .ToArray();
 
             var handleMethods = o.GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)

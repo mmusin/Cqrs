@@ -24,7 +24,7 @@ namespace Lykke.Cqrs
             string commandsKeyword = null,
             string eventsKeyword = null)
         {
-            m_EnvironmentPrefix = environment!=null?environment+".":"";
+            m_EnvironmentPrefix = environment != null ? environment + "." : "";
             m_ExclusiveQueuePostfix = "." + (exclusiveQueuePostfix ?? Environment.MachineName);
             m_Transport = transport;
             m_SerializationFormat = serializationFormat;

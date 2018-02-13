@@ -15,11 +15,6 @@ using IRegistration = Inceptum.Cqrs.Configuration.IRegistration;
 
 namespace Inceptum.Cqrs.Castle
 {
-    public interface ICqrsEngineBootstrapper
-    {
-        void Start();
-    }
-
     public class CqrsFacility : AbstractFacility, ICqrsEngineBootstrapper
     {
         private readonly string m_EngineComponetName = Guid.NewGuid().ToString();

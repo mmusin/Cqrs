@@ -8,11 +8,6 @@ using Inceptum.Messaging.Contract;
 
 namespace Lykke.Cqrs
 {
-    public interface IRouteMap : IEnumerable<Route>
-    {
-        Route this[string name] { get; }
-    }
-
     public class RouteMap : IRouteMap
     {
         private readonly Dictionary<string, Route> m_RouteMap = new Dictionary<string, Route>();

@@ -11,43 +11,6 @@ using Inceptum.Messaging.Contract;
 
 namespace Lykke.Cqrs
 {
-    public interface IDependencyResolver
-    {
-        object GetService(Type type);
-        bool HasService(Type type);
-    }
-
-    internal class DefaultDependencyResolver : IDependencyResolver
-    {
-        public object GetService(Type type)
-        {
-            return Activator.CreateInstance(type);
-        }
-
-        public bool HasService(Type type)
-        {
-            return !type.IsInterface;
-        }
-    }
-
-    public class DefaultEndpointProvider : IEndpointProvider
-    {
-        public bool Contains(string endpointName)
-        {
-            return false;
-        }
-
-        public Endpoint Get(string endpointName)
-        {
-            throw new ApplicationException(string.Format("Endpoint '{0}' not found",endpointName));
-        }
-    }
-
-    public interface ICqrsEngine
-    {
-        void SendCommand<T>(T command, string boundedContext, string remoteBoundedContext, uint priority = 0);
-    }
-
     public class CqrsEngine : ICqrsEngine, IDisposable
     {
         private readonly IMessagingEngine m_MessagingEngine;
