@@ -1,8 +1,7 @@
 ﻿using System;
 using Castle.MicroKernel;
-using IDependencyResolver = Lykke.Cqrs.IDependencyResolver;
 
-namespace Inceptum.Cqrs.Castle
+namespace Lykke.Cqrs.Castle
 {
     internal class CastleDependencyResolver : IDependencyResolver
     {

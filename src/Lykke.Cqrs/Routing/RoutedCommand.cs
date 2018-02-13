@@ -1,8 +1,8 @@
 ﻿using Inceptum.Messaging.Contract;
 
-namespace Inceptum.Cqrs.InfrastructureCommands
+namespace Lykke.Cqrs.InfrastructureCommands
 {
-    class RoutedCommand<T>
+    internal class RoutedCommand<T>
     {
         public RoutedCommand(T command, Endpoint originEndpoint, string originRoute)
         {

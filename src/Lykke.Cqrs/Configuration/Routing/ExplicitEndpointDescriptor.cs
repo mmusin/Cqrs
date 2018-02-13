@@ -1,7 +1,7 @@
 using System;
-using Inceptum.Cqrs.Routing;
+using Lykke.Cqrs.Routing;
 
-namespace Inceptum.Cqrs.Configuration.Routing
+namespace Lykke.Cqrs.Configuration.Routing
 {
     public class ExplicitEndpointDescriptor<TDescriptor, TRegistration> 
         where TDescriptor : RouteDescriptorBase<TRegistration> 

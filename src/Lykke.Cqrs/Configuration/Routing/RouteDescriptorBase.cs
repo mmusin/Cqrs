@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Inceptum.Cqrs.Routing;
-using Lykke.Cqrs;
+using Lykke.Cqrs.Routing;
 
-namespace Inceptum.Cqrs.Configuration.Routing
+namespace Lykke.Cqrs.Configuration.Routing
 {
     public abstract class RouteDescriptorBase<TRegistration> : RegistrationWrapper<TRegistration> where TRegistration : IRegistration
     {

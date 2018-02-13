@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Lykke.Cqrs;
 
-namespace Inceptum.Cqrs.Configuration.Routing
+namespace Lykke.Cqrs.Configuration.Routing
 {
     public class ProcessingOptionsDescriptor<TRegistrtaion> : RegistrationWrapper<TRegistrtaion>, IDescriptor<IRouteMap>
         where TRegistrtaion : IRegistration

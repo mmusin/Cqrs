@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Inceptum.Cqrs.Configuration.Saga;
-using Lykke.Cqrs;
+using Lykke.Cqrs.Configuration.Saga;
 
-namespace Inceptum.Cqrs.Configuration.Routing
+namespace Lykke.Cqrs.Configuration.Routing
 {
     public class ListeningEventsDescriptor<TRegistration> 
         : ListeningRouteDescriptor<ListeningEventsDescriptor<TRegistration>,TRegistration>, IListeningEventsDescriptor<TRegistration>

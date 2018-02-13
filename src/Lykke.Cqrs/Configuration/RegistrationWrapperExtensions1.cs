@@ -1,10 +1,9 @@
 ﻿using System;
-using Inceptum.Cqrs.Configuration.BoundedContext;
-using Inceptum.Cqrs.Configuration.Routing;
-using Inceptum.Cqrs.Configuration.Saga;
-using Lykke.Cqrs;
+using Lykke.Cqrs.Configuration.BoundedContext;
+using Lykke.Cqrs.Configuration.Routing;
+using Lykke.Cqrs.Configuration.Saga;
 
-namespace Inceptum.Cqrs.Configuration
+namespace Lykke.Cqrs.Configuration
 {
     public static class RegistrationWrapperExtensions
     {

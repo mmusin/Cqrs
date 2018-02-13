@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Lykke.Cqrs;
 
-namespace Inceptum.Cqrs.Configuration
+namespace Lykke.Cqrs.Configuration
 {
     public abstract class RegistrationBase<TRegistration,TSubject> : IRegistration where TRegistration : class, IRegistration
     {

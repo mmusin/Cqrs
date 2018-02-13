@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel;
 
-namespace Inceptum.Cqrs.Configuration
+namespace Lykke.Cqrs.Configuration
 {
     public interface IHideObjectMembers
     {

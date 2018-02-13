@@ -6,8 +6,8 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using Inceptum.Cqrs.InfrastructureCommands;
 using Inceptum.Messaging.Contract;
+using Lykke.Cqrs.InfrastructureCommands;
 
 namespace Lykke.Cqrs
 {

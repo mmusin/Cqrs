@@ -1,7 +1,6 @@
 ﻿using System;
-using Lykke.Cqrs;
 
-namespace Inceptum.Cqrs.Configuration.BoundedContext
+namespace Lykke.Cqrs.Configuration.BoundedContext
 {
     internal class LocalProcessDescriptor : DescriptorWithDependencies<Context>
     {

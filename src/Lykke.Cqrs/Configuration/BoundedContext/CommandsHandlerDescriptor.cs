@@ -1,9 +1,8 @@
 ﻿using System;
-using Lykke.Cqrs;
 
-namespace Inceptum.Cqrs.Configuration.BoundedContext
+namespace Lykke.Cqrs.Configuration.BoundedContext
 {
-    class CommandsHandlerDescriptor : DescriptorWithDependencies<Context>
+    internal class CommandsHandlerDescriptor : DescriptorWithDependencies<Context>
     {
         public CommandsHandlerDescriptor(params object[] handlers):base(handlers)
         {

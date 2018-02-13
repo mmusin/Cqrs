@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Lykke.Cqrs;
 
-namespace Inceptum.Cqrs.Configuration
+namespace Lykke.Cqrs.Configuration
 {
-    abstract class DescriptorWithDependencies<TSubject> : IDescriptor<TSubject>
+    internal abstract class DescriptorWithDependencies<TSubject> : IDescriptor<TSubject>
     {
         private readonly Type[] m_Dependedncies = new Type[0];
         private readonly Func<Func<Type, object>, IEnumerable<object>> m_ResolveDependedncies;

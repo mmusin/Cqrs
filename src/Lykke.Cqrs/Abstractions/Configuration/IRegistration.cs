@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Lykke.Cqrs;
 
-namespace Inceptum.Cqrs.Configuration
+namespace Lykke.Cqrs.Configuration
 {
     public interface IRegistration
     {

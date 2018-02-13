@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Lykke.Cqrs;
 
-namespace Inceptum.Cqrs.Routing
+namespace Lykke.Cqrs.Routing
 {
     public class RoutingKey
     {
