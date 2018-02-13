@@ -32,7 +32,8 @@ namespace Lykke.Cqrs
         {
             get
             {
-                if (string.IsNullOrEmpty(name)) throw new ArgumentException("name should be not empty string", "name");
+                if (string.IsNullOrEmpty(name))
+                    throw new ArgumentException("name should be not empty string", "name");
                 Route route;
                 if (m_RouteMap.TryGetValue(name, out route))
                     return route;
@@ -40,14 +41,6 @@ namespace Lykke.Cqrs
                 route = new Route(name, Name);
                 m_RouteMap.Add(name, route);
                 return route;
-            }
-        }
-
-        internal void ResolveRoutes(IEndpointProvider endpointProvider)
-        {
-            foreach (Route route in m_RouteMap.Values)
-            {
-                route.Resolve(endpointProvider);
             }
         }
 
@@ -79,6 +72,14 @@ namespace Lykke.Cqrs
                 messagingEngine.Send(message, direction.endpoint, direction.processingGroup);
             }
             return true;
+        }
+
+        internal void ResolveRoutes(IEndpointProvider endpointProvider)
+        {
+            foreach (Route route in m_RouteMap.Values)
+            {
+                route.Resolve(endpointProvider);
+            }
         }
     }
 }

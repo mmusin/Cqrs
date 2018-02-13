@@ -286,10 +286,18 @@ namespace Lykke.Cqrs
         {
             if (!SendMessage(typeof (T), command, RouteType.Commands, boundedContext, priority, remoteBoundedContext))
             {
-                if(boundedContext!=null)
+                if (boundedContext != null)
                     throw new InvalidOperationException(string.Format("bound context '{0}' does not support command '{1}' with priority {2}", boundedContext, typeof(T), priority));
                 throw new InvalidOperationException(string.Format("Default route map does not contain rout for command '{0}' with priority {1}", typeof(T), priority));
             }
+        }
+
+        internal void PublishEvent(object @event, string boundedContext)
+        {
+            if (@event == null)
+                throw new ArgumentNullException("event");
+            if (!SendMessage(@event.GetType(), @event, RouteType.Events, boundedContext, 0))
+                throw new InvalidOperationException(string.Format("bound context '{0}' does not support event '{1}'", boundedContext, @event.GetType()));
         }
 
         private bool SendMessage(Type type, object message, RouteType routeType, string context, uint priority, string remoteBoundedContext = null)
@@ -306,21 +314,16 @@ namespace Lykke.Cqrs
             var published = routeMap.PublishMessage(m_MessagingEngine, type, message, routeType, priority, remoteBoundedContext);
             if (!published && routeType == RouteType.Commands)
             {
-                published = DefaultRouteMap.PublishMessage(m_MessagingEngine,type,message, routeType, priority, remoteBoundedContext);
+                published = DefaultRouteMap.PublishMessage(m_MessagingEngine, type, message, routeType, priority, remoteBoundedContext);
             }
             return published;
         }
 
-        internal void PublishEvent(object @event, string boundedContext)
-        {
-            if (@event == null) throw new ArgumentNullException("event");
-            if (!SendMessage(@event.GetType(), @event, RouteType.Events, boundedContext, 0))
-                throw new InvalidOperationException(string.Format("bound context '{0}' does not support event '{1}'", boundedContext, @event.GetType()));
-        }
-
+        /*
         internal void PublishEvent(object @event, Endpoint endpoint, string processingGroup, Dictionary<string, string> headers = null)
         {
             m_MessagingEngine.Send(@event, endpoint, processingGroup,headers);
         }
+        */
     }
 }

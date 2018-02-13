@@ -33,8 +33,7 @@ namespace Inceptum.Cqrs.Utils
             /// <param name="scheduler">The scheduler.</param>
             public QueuedTaskSchedulerDebugView(QueuedTaskScheduler scheduler)
             {
-                if (scheduler == null) throw new ArgumentNullException("scheduler");
-                _scheduler = scheduler;
+                _scheduler = scheduler ?? throw new ArgumentNullException("scheduler");
             }
 
             /// <summary>Gets all of the Tasks queued to the scheduler directly.</summary>
@@ -112,13 +111,12 @@ namespace Inceptum.Cqrs.Utils
             TaskScheduler targetScheduler,
             int maxConcurrencyLevel)
         {
-            // Validate arguments
-            if (targetScheduler == null) throw new ArgumentNullException("underlyingScheduler");
-            if (maxConcurrencyLevel < 0) throw new ArgumentOutOfRangeException("concurrencyLevel");
+            if (maxConcurrencyLevel < 0)
+                throw new ArgumentOutOfRangeException("concurrencyLevel");
 
             // Initialize only those fields relevant to use an underlying scheduler.  We don't
             // initialize the fields relevant to using our own custom threads.
-            _targetScheduler = targetScheduler;
+            _targetScheduler = targetScheduler ?? throw new ArgumentNullException("underlyingScheduler");
             _nonthreadsafeTaskQueue = new Queue<Task>();
 
             // If 0, use the number of logical processors.  But make sure whatever value we pick
@@ -156,7 +154,8 @@ namespace Inceptum.Cqrs.Utils
         {
             // Validates arguments (some validation is left up to the Thread type itself).
             // If the thread count is 0, default to the number of logical processors.
-            if (threadCount < 0) throw new ArgumentOutOfRangeException("concurrencyLevel");
+            if (threadCount < 0)
+                throw new ArgumentOutOfRangeException("concurrencyLevel");
             else if (threadCount == 0) _concurrencyLevel = Environment.ProcessorCount;
             else _concurrencyLevel = threadCount;
 
@@ -309,7 +308,8 @@ namespace Inceptum.Cqrs.Utils
         protected override void QueueTask(Task task)
         {
             // If we've been disposed, no one should be queueing
-            if (_disposeCancellation.IsCancellationRequested) throw new ObjectDisposedException(GetType().Name);
+            if (_disposeCancellation.IsCancellationRequested)
+                throw new ObjectDisposedException(GetType().Name);
 
             // If the target scheduler is null (meaning we're using our own threads),
             // add the task to the blocking queue
@@ -522,8 +522,7 @@ namespace Inceptum.Cqrs.Utils
                 /// <param name="queue">The queue to be debugged.</param>
                 public QueuedTaskSchedulerQueueDebugView(QueuedTaskSchedulerQueue queue)
                 {
-                    if (queue == null) throw new ArgumentNullException("queue");
-                    _queue = queue;
+                    _queue = queue ?? throw new ArgumentNullException("queue");
                 }
 
                 /// <summary>Gets the priority of this queue in its associated scheduler.</summary>
@@ -566,7 +565,8 @@ namespace Inceptum.Cqrs.Utils
             /// <param name="task">The task to be queued.</param>
             protected override void QueueTask(Task task)
             {
-                if (_disposed) throw new ObjectDisposedException(GetType().Name);
+                if (_disposed)
+                    throw new ObjectDisposedException(GetType().Name);
 
                 // Queue up the task locally to this queue, and then notify
                 // the parent scheduler that there's work available

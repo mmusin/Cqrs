@@ -29,7 +29,8 @@ namespace Lykke.Cqrs
 
         public void Wire(object o, params OptionalParameterBase[] parameters)
         {
-            if (o == null) throw new ArgumentNullException("o");
+            if (o == null)
+                throw new ArgumentNullException("o");
             parameters = parameters
                 .Concat(new OptionalParameterBase[] { new OptionalParameter<string>("boundedContext", m_BoundedContext) })
                 .ToArray();
