@@ -4,6 +4,9 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.Extensibility;
 using Common.Log;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
@@ -20,6 +23,7 @@ namespace Lykke.Cqrs
         private readonly IRegistration[] m_Registrations;
         private readonly IDependencyResolver m_DependencyResolver;
         private readonly bool m_CreateMissingEndpoints;
+        protected readonly TelemetryClient _telemetry = new TelemetryClient();
 
         protected IMessagingEngine MessagingEngine
         {
@@ -311,12 +315,28 @@ namespace Lykke.Cqrs
                     throw new ArgumentException(string.Format("bound context {0} not found", context), "context");
                 }
             }
-            var published = routeMap.PublishMessage(m_MessagingEngine, type, message, routeType, priority, remoteBoundedContext);
-            if (!published && routeType == RouteType.Commands)
+            var telemtryOperation = InitTelemetryOperation(
+                routeType == RouteType.Commands ? "Cqrs command" : "Cqrs event",
+                type.Name,
+                context,
+                remoteBoundedContext);
+            try
             {
-                published = DefaultRouteMap.PublishMessage(m_MessagingEngine, type, message, routeType, priority, remoteBoundedContext);
+                var published = routeMap.PublishMessage(m_MessagingEngine, type, message, routeType, priority, remoteBoundedContext);
+                if (!published && routeType == RouteType.Commands)
+                    published = DefaultRouteMap.PublishMessage(m_MessagingEngine, type, message, routeType, priority, remoteBoundedContext);
+                return published;
             }
-            return published;
+            catch (Exception e)
+            {
+                telemtryOperation.Telemetry.Success = false;
+                _telemetry.TrackException(e);
+                throw;
+            }
+            finally
+            {
+                _telemetry.StopOperation(telemtryOperation);
+            }
         }
 
         /*
@@ -325,5 +345,20 @@ namespace Lykke.Cqrs
             m_MessagingEngine.Send(@event, endpoint, processingGroup,headers);
         }
         */
+
+        private IOperationHolder<DependencyTelemetry> InitTelemetryOperation(
+            string type,
+            string target,
+            string name,
+            string data)
+        {
+            var operation = _telemetry.StartOperation<DependencyTelemetry>(name);
+            operation.Telemetry.Type = type;
+            operation.Telemetry.Target = target;
+            operation.Telemetry.Name = name;
+            operation.Telemetry.Data = data;
+
+            return operation;
+        }
     }
 }
