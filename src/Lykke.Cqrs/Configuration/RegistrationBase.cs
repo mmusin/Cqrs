@@ -27,7 +27,6 @@ namespace Inceptum.Cqrs.Configuration
 
         protected abstract TSubject GetSubject(CqrsEngine cqrsEngine);
 
-
         void IRegistration.Process(CqrsEngine cqrsEngine)
         {
             foreach (var descriptor in m_Descriptors)
@@ -42,6 +41,5 @@ namespace Inceptum.Cqrs.Configuration
             m_Descriptors.Add(descriptor);
             return descriptor;
         }
-
     }
 }

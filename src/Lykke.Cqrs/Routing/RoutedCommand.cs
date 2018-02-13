@@ -4,7 +4,7 @@ namespace Inceptum.Cqrs.InfrastructureCommands
 {
     class RoutedCommand<T>
     {
-        public RoutedCommand(T command, Endpoint originEndpoint,string originRoute)
+        public RoutedCommand(T command, Endpoint originEndpoint, string originRoute)
         {
             Command = command;
             OriginEndpoint = originEndpoint;

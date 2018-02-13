@@ -11,26 +11,10 @@ using Inceptum.Messaging.Contract;
 
 namespace Lykke.Cqrs
 {
-    //TODO[kn]: rename to EventHandlingResult
-    public class CommandHandlingResult
+    internal class CommandDispatcher : IDisposable
     {
-        public long RetryDelay { get; set; }
-        public bool Retry { get; set; }
-
-        public static CommandHandlingResult Ok()
-        {
-            return new CommandHandlingResult { Retry = false, RetryDelay = 0 };
-        }
-
-        public static CommandHandlingResult Fail(TimeSpan delay)
-        {
-            return new CommandHandlingResult { Retry = true, RetryDelay = (int)delay.TotalMilliseconds };
-        }
-    }
-
-    internal class CommandDispatcher:IDisposable
-    {
-        readonly Dictionary<Type, Func<object, Endpoint,string, CommandHandlingResult>> m_Handlers = new Dictionary<Type, Func<object, Endpoint,string, CommandHandlingResult>>();
+        readonly Dictionary<Type, Func<object, Endpoint, string, CommandHandlingResult>> m_Handlers =
+            new Dictionary<Type, Func<object, Endpoint,string, CommandHandlingResult>>();
         private readonly string m_BoundedContext;
 
         private readonly ILog _log;
@@ -46,9 +30,10 @@ namespace Lykke.Cqrs
         public void Wire(object o, params OptionalParameter[] parameters)
         {
             if (o == null) throw new ArgumentNullException("o");
-            parameters = parameters.Concat(new OptionalParameter[] { new OptionalParameter<string>("boundedContext", m_BoundedContext) }).ToArray();
+            parameters = parameters
+                .Concat(new OptionalParameter[] { new OptionalParameter<string>("boundedContext", m_BoundedContext) })
+                .ToArray();
 
-        
             var handleMethods = o.GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(m => m.Name == "Handle" &&
                     !m.IsGenericMethod &&
@@ -67,25 +52,31 @@ namespace Lykke.Cqrs
                 })
                 .Where(m => m.callParameters.All(p => p.parameter != null));
 
-
             foreach (var method in handleMethods)
             {
-                registerHandler(method.commandType, o, method.callParameters.ToDictionary(p => p.parameter, p => p.optionalParameter.Value),method.returnsResult);
+                RegisterHandler(
+                    method.commandType,
+                    o,
+                    method.callParameters.ToDictionary(p => p.parameter, p => p.optionalParameter.Value),
+                    method.returnsResult);
             }
-
         }
 
-        private Expression invokeFunc(object o)
+        private Expression InvokeFunc(object o)
         {
             return Expression.Call(Expression.Constant(o), o.GetType().GetMethod("Invoke"));
         }
 
-        private bool isFunc(Type type)
+        private bool IsFunc(Type type)
         {
             return (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Func<>));
         }
 
-        private void registerHandler(Type commandType, object o, Dictionary<ParameterInfo, object> optionalParameters, bool returnsResult)
+        private void RegisterHandler(
+            Type commandType,
+            object o,
+            Dictionary<ParameterInfo, object> optionalParameters,
+            bool returnsResult)
         {
             var isRoutedCommandHandler = commandType.IsGenericType && commandType.GetGenericTypeDefinition() == typeof (RoutedCommand<>);
             Type handledType;
@@ -94,7 +85,6 @@ namespace Lykke.Cqrs
             var route = Expression.Parameter(typeof(string), "route");
 
             Expression commandParameter;
-            
             if (!isRoutedCommandHandler)
             {
                 commandParameter = Expression.Convert(command, commandType);
@@ -110,7 +100,7 @@ namespace Lykke.Cqrs
             // prepare variables expressions
             var variables = optionalParameters
                  .Where(p => p.Value != null)
-                 .Where(p => isFunc(p.Value.GetType()))
+                 .Where(p => IsFunc(p.Value.GetType()))
                  .ToDictionary(p => p.Key.Name, p => Expression.Variable(p.Key.ParameterType, p.Key.Name));
 
             //prepare parameters expression to make handle call
@@ -124,7 +114,7 @@ namespace Lykke.Cqrs
             var call = Expression.Block(
                  variables.Values.AsEnumerable(), //declare variables to populate from func factoreis
                  variables
-                     .Select(p => Expression.Assign(p.Value, invokeFunc(optionalParameters.Single(x => x.Key.Name == p.Key).Value))) // invoke func and assign result to variable
+                     .Select(p => Expression.Assign(p.Value, InvokeFunc(optionalParameters.Single(x => x.Key.Name == p.Key).Value))) // invoke func and assign result to variable
                      .Cast<Expression>()
                      .Concat(new[] {
                         Expression.TryFinally(
@@ -137,10 +127,12 @@ namespace Lykke.Cqrs
                       .Cast<Expression>().DefaultIfEmpty(Expression.Empty())))
                      })
                  );
-            
+
             Expression<Func<object, Endpoint, string, CommandHandlingResult>> lambda;
             if (returnsResult)
+            {
                 lambda = (Expression<Func<object, Endpoint, string, CommandHandlingResult>>)Expression.Lambda(call, command, endpoint, route);
+            }
             else
             {
                 LabelTarget returnTarget = Expression.Label(typeof(Task<CommandHandlingResult>));
@@ -151,12 +143,14 @@ namespace Lykke.Cqrs
                 lambda = (Expression<Func<object, Endpoint, string, CommandHandlingResult>>)Expression.Lambda(block, command, endpoint,route);
             }
 
-
             Func<object, Endpoint, string, CommandHandlingResult> handler;
             if (m_Handlers.TryGetValue(handledType, out handler))
             {
                 throw new InvalidOperationException(string.Format(
-                    "Only one handler per command is allowed. Command {0} handler is already registered in bound context {1}. Can not register {2} as handler for it", commandType, m_BoundedContext, o));
+                    "Only one handler per command is allowed. Command {0} handler is already registered in bound context {1}. Can not register {2} as handler for it",
+                    commandType,
+                    m_BoundedContext,
+                    o));
             }
             m_Handlers.Add(handledType, lambda.Compile());
         }
@@ -165,16 +159,23 @@ namespace Lykke.Cqrs
         {
             if (!m_Handlers.TryGetValue(command.GetType(), out var handler))
             {
-                _log.WriteWarningAsync(nameof(CommandDispatcher), nameof(Dispatch), $"Failed to handle command {command} in bound context {m_BoundedContext}, no handler was registered for it");
-                
+                _log.WriteWarningAsync(
+                    nameof(CommandDispatcher),
+                    nameof(Dispatch),
+                    $"Failed to handle command {command} in bound context {m_BoundedContext}, no handler was registered for it");
                 acknowledge(m_FailedCommandRetryDelay, false);
                 return;
             }
 
-              handle(command, acknowledge, handler,commandOriginEndpoint,route);
+            Handle(command, acknowledge, handler,commandOriginEndpoint,route);
         }
 
-        private void handle(object command, AcknowledgeDelegate acknowledge, Func<object, Endpoint, string, CommandHandlingResult> handler, Endpoint commandOriginEndpoint,string route)
+        private void Handle(
+            object command,
+            AcknowledgeDelegate acknowledge,
+            Func<object, Endpoint, string, CommandHandlingResult> handler,
+            Endpoint commandOriginEndpoint,
+            string route)
         {
             try
             {
@@ -183,7 +184,9 @@ namespace Lykke.Cqrs
             }
             catch (Exception e)
             {
-                _log.WriteErrorAsync(nameof(CommandDispatcher), nameof(handle),
+                _log.WriteErrorAsync(
+                    nameof(CommandDispatcher),
+                    nameof(Handle),
                     command != null
                         ? $"Failed to handle command of type {command.GetType().Name}. Command:\r\b{command.ToJson()}"
                         : "Failed to handle null command",

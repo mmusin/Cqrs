@@ -7,7 +7,6 @@ using NUnit.Framework;
 
 namespace Inceptum.Cqrs.Tests
 {
-
     [TestFixture]
     public class CommandDispatcherTests
     {
@@ -22,7 +21,7 @@ namespace Inceptum.Cqrs.Tests
             var dispatcher = new CommandDispatcher(new LogToConsole(), "testBC");
             var handler = new Handler();
             dispatcher.Wire(handler);
-            dispatcher.Dispatch("test", (delay, acknowledge) => { },new Endpoint(),"route");
+            dispatcher.Dispatch("test", (delay, acknowledge) => { },new Endpoint(), "route");
             dispatcher.Dispatch(1, (delay, acknowledge) => { }, new Endpoint(), "route");
             Assert.That(handler.HandledCommands, Is.EquivalentTo(new object[] { "test", 1 }), "Some commands were not dispatched");
         }
@@ -40,14 +39,14 @@ namespace Inceptum.Cqrs.Tests
             Assert.That(handler.HandledCommands, Is.EquivalentTo(new object[] { (Int64)1 }), "Some commands were not dispatched");
             Assert.IsFalse(int64Repo.IsDisposed, "Optional parameter should NOT be disposed");
         }
-        
+
         [Test]
         public void WireWithFactoryOptionalParameterTest()
         {
             var dispatcher = new CommandDispatcher(new LogToConsole(), "testBC");
             var handler = new RepoHandler();
             var int64Repo = new Int64Repo();
-            dispatcher.Wire(handler, new[] {new FactoryParameter<IInt64Repo>(()=>int64Repo)});
+            dispatcher.Wire(handler, new[] {new FactoryParameter<IInt64Repo>(() => int64Repo)});
             dispatcher.Dispatch((Int64)1, (delay, acknowledge) => { }, new Endpoint(), "route");
             
             Assert.That(handler.HandledCommands, Is.EquivalentTo(new object[] { (Int64)1 }), "Some commands were not dispatched");
@@ -65,7 +64,7 @@ namespace Inceptum.Cqrs.Tests
             Assert.That(handler.HandledCommands, Is.EquivalentTo(new object[] { (Int64)1 }), "Some commands were not dispatched");
         }
 
-        [Test]        
+        [Test]
         public void MultipleHandlersAreNotAllowedDispatchTest()
         {
             var dispatcher = new CommandDispatcher(new LogToConsole(), "testBC");
@@ -78,7 +77,6 @@ namespace Inceptum.Cqrs.Tests
                 dispatcher.Wire(handler2);
             }, Throws.TypeOf<InvalidOperationException>());
         }
-
 
         [Test]
         public void DispatchOfUnknownCommandShouldFailTest()
@@ -99,6 +97,7 @@ namespace Inceptum.Cqrs.Tests
             dispatcher.Dispatch(DateTime.Now,   (delay, acknowledge) => { ack = false; }, new Endpoint(), "route");
             Assert.That(ack,Is.False,"Failed command was not unacked");
         }
+
         [Test]
         public void UnknownCommandTest()
         {
@@ -111,7 +110,6 @@ namespace Inceptum.Cqrs.Tests
 
     public interface IInt64Repo
     {
-        
     }
 
     internal class Int64Repo : IInt64Repo, IDisposable
@@ -131,7 +129,6 @@ namespace Inceptum.Cqrs.Tests
             HandledCommands.Add(command);
         }
     }
-
 
     public class Handler
     {

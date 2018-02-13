@@ -13,7 +13,6 @@ namespace Inceptum.Cqrs.Tests
         [Test]
         public void SubjectTest()
         {
-
             //var list = Expression.New(typeof (List<object>));
             var list = Expression.Variable(typeof(List<object>),"list");
             var array = Expression.Variable(typeof(object[]), "array");
@@ -35,14 +34,11 @@ namespace Inceptum.Cqrs.Tests
             foreach (var v in objects)
             {
                 Console.WriteLine(v);
-                
             }
-
 
         }[Test]
         public void Subject1Test()
         {
-            
             var cw = typeof(Console).GetMethod("WriteLine",BindingFlags.Static|BindingFlags.Public,null,new []{typeof(object)},null);
             ParameterExpression input = Expression.Parameter(typeof(IEnumerable),"input");
             var list = Expression.Variable(typeof(List<object>), "list");
@@ -65,16 +61,11 @@ namespace Inceptum.Cqrs.Tests
             foreach (var v in objects)
             {
                 Console.WriteLine(v);
-                
             }
-
-
         }
-
 
         public static BlockExpression ForEachExpr(ParameterExpression enumerable, ParameterExpression item,Expression expression)
         {
-
             var enumerator = Expression.Variable(typeof(IEnumerator), "enumerator");
             var doMoveNext = Expression.Call(enumerator, typeof(IEnumerator).GetMethod("MoveNext"));
             var assignToEnum = Expression.Assign(enumerator, Expression.Call(enumerable, typeof(IEnumerable).GetMethod("GetEnumerator")));
@@ -89,11 +80,10 @@ namespace Inceptum.Cqrs.Tests
                             Expression.NotEqual(doMoveNext, Expression.Constant(false)),
                             Expression.Block(assignCurrent, expression),
                             Expression.Break(@break))
-                    , @break)  
+                    , @break)
                 );
 
             return @foreach;
         }
-         
     }
 }

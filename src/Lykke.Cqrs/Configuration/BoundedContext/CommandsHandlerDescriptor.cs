@@ -11,16 +11,14 @@ namespace Inceptum.Cqrs.Configuration.BoundedContext
 
         public CommandsHandlerDescriptor(params Type[] handlers):base(handlers)
         {
-
         }
-        
+
         public override void Process(Context context, CqrsEngine cqrsEngine)
         {
             foreach (var handler in ResolvedDependencies)
-            {                
+            {
                 context.CommandDispatcher.Wire(handler, new OptionalParameter<IEventPublisher>(context.EventsPublisher));
             }
         }
-
-    }        
+    }
 }

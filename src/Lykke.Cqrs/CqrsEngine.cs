@@ -5,7 +5,6 @@ using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Common.Log;
-using Inceptum.Cqrs;
 using Inceptum.Cqrs.Configuration;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
@@ -31,7 +30,6 @@ namespace Lykke.Cqrs
         }
     }
 
-
     public class DefaultEndpointProvider : IEndpointProvider
     {
         public bool Contains(string endpointName)
@@ -45,21 +43,17 @@ namespace Lykke.Cqrs
         }
     }
 
-    public class CqrsEngine :ICqrsEngine,IDisposable
+    public interface ICqrsEngine
     {
-        public ILog Log { get; }
+        void SendCommand<T>(T command, string boundedContext, string remoteBoundedContext, uint priority = 0);
+    }
+
+    public class CqrsEngine : ICqrsEngine, IDisposable
+    {
         private readonly IMessagingEngine m_MessagingEngine;
-        private readonly CompositeDisposable m_Subscription=new CompositeDisposable();
-        internal  IEndpointResolver EndpointResolver { get; set; }
-     
+        private readonly CompositeDisposable m_Subscription = new CompositeDisposable();
         private readonly IEndpointProvider m_EndpointProvider;
         private readonly List<Context> m_Contexts;
-        internal List<Context> Contexts
-        {
-            get { return m_Contexts; }
-        }
-        public RouteMap DefaultRouteMap { get; private set; }
-
         private readonly IRegistration[] m_Registrations;
         private readonly IDependencyResolver m_DependencyResolver;
         private readonly bool m_CreateMissingEndpoints;
@@ -69,24 +63,53 @@ namespace Lykke.Cqrs
             get { return m_MessagingEngine; }
         }
 
+        internal IEndpointResolver EndpointResolver { get; set; }
+        internal List<Context> Contexts
+        {
+            get { return m_Contexts; }
+        }
+        internal IDependencyResolver DependencyResolver
+        {
+            get { return m_DependencyResolver; }
+        }
 
-        public CqrsEngine(ILog log, IMessagingEngine messagingEngine,  IEndpointProvider endpointProvider, params IRegistration[] registrations)
+        public ILog Log { get; }
+        public RouteMap DefaultRouteMap { get; private set; }
+
+        public CqrsEngine(
+            ILog log,
+            IMessagingEngine messagingEngine,
+            IEndpointProvider endpointProvider,
+            params IRegistration[] registrations)
             : this(log, new DefaultDependencyResolver(), messagingEngine, endpointProvider, registrations)
         {
         }
 
-
-        public CqrsEngine(ILog log, IMessagingEngine messagingEngine, params IRegistration[] registrations)
+        public CqrsEngine(
+            ILog log,
+            IMessagingEngine messagingEngine,
+            params IRegistration[] registrations)
             : this(log, new DefaultDependencyResolver(), messagingEngine,   new DefaultEndpointProvider(), registrations)
         {
         }
 
-        public CqrsEngine(ILog log, IDependencyResolver dependencyResolver, IMessagingEngine messagingEngine, IEndpointProvider endpointProvider, params IRegistration[] registrations)
+        public CqrsEngine(
+            ILog log,
+            IDependencyResolver dependencyResolver,
+            IMessagingEngine messagingEngine,
+            IEndpointProvider endpointProvider,
+            params IRegistration[] registrations)
             : this(log, dependencyResolver, messagingEngine, endpointProvider, false, registrations)
         {
         }
 
-        public CqrsEngine(ILog log, IDependencyResolver dependencyResolver, IMessagingEngine messagingEngine, IEndpointProvider endpointProvider, bool createMissingEndpoints, params IRegistration[] registrations)
+        public CqrsEngine(
+            ILog log,
+            IDependencyResolver dependencyResolver,
+            IMessagingEngine messagingEngine,
+            IEndpointProvider endpointProvider,
+            bool createMissingEndpoints,
+            params IRegistration[] registrations)
         {
             Log = log;
             m_CreateMissingEndpoints = createMissingEndpoints;
@@ -97,12 +120,10 @@ namespace Lykke.Cqrs
             m_EndpointProvider = endpointProvider;
             m_Contexts=new List<Context>();
             DefaultRouteMap = new RouteMap("default");
-            init();
-            
+            Init();
         }
 
-
-        private void init()
+        private void Init()
         {
             foreach (var registration in m_Registrations)
             {
@@ -113,13 +134,12 @@ namespace Lykke.Cqrs
                 registration.Process(this);
             }
 
-            ensureEndpoints();
+            EnsureEndpoints();
 
             foreach (var boundedContext in Contexts)
             {
                 foreach (var route in boundedContext.Routes)
                 {
-                            
                     Context context = boundedContext;
                     var subscriptions = route.MessageRoutes
                         .Where(r => r.Key.CommunicationType == CommunicationType.Subscribe)
@@ -128,7 +148,12 @@ namespace Lykke.Cqrs
                             type = r.Key.MessageType,
                             priority = r.Key.Priority,
                             remoteBoundedContext=r.Key.RemoteBoundedContext,
-                            endpoint = new Endpoint(r.Value.TransportId, "", r.Value.Destination.Subscribe, r.Value.SharedDestination, r.Value.SerializationFormat)
+                            endpoint = new Endpoint(
+                                r.Value.TransportId,
+                                "",
+                                r.Value.Destination.Subscribe,
+                                r.Value.SharedDestination,
+                                r.Value.SerializationFormat)
                         })
                         .GroupBy(x => Tuple.Create(x.endpoint, x.priority,x.remoteBoundedContext))
                         .Select(g => new
@@ -138,7 +163,6 @@ namespace Lykke.Cqrs
                             remoteBoundedContext =g.Key.Item3,
                             types = g.Select(x=>x.type).ToArray()
                         });
-
 
                     foreach (var subscription in subscriptions)
                     {
@@ -155,13 +179,11 @@ namespace Lykke.Cqrs
                                 messageTypeName = "event";
                                 break;
                             case RouteType.Commands:
-                                callback =
-                                    (command, acknowledge, headers) =>
-                                        context.CommandDispatcher.Dispatch(command, acknowledge, endpoint, routeName);
+                                callback = (command, acknowledge, headers) => context.CommandDispatcher.Dispatch(command, acknowledge, endpoint, routeName);
                                 messageTypeName = "command";
                                 break;
                         }
-                        
+
                         m_Subscription.Add(m_MessagingEngine.Subscribe(
                             endpoint,
                             callback,
@@ -180,10 +202,10 @@ namespace Lykke.Cqrs
             foreach (var boundedContext in Contexts)
             {
                 boundedContext.Processes.ForEach(p => p.Start(boundedContext, boundedContext.EventsPublisher));
-            }            
+            }
         }
 
-        private void ensureEndpoints()
+        private void EnsureEndpoints()
         {
             var allEndpointsAreValid = true;
             var errorMessage=new StringBuilder("Some endpoints are not valid:").AppendLine();
@@ -197,7 +219,6 @@ namespace Lykke.Cqrs
                     m_MessagingEngine.AddProcessingGroup(route.ProcessingGroupName,route.ProcessingGroup);
                 }
             }
-
 
             foreach (var routeMap in (new[] { DefaultRouteMap }).Concat(Contexts))
             {
@@ -219,37 +240,58 @@ namespace Lykke.Cqrs
                         {
                             if (!m_MessagingEngine.VerifyEndpoint(endpoint, EndpointUsage.Publish, m_CreateMissingEndpoints, out error))
                             {
-                                errorMessage.AppendFormat(
-                                    "Route '{1}' within bounded context '{0}' for {2} type '{3}' has resolved endpoint {4} that is not properly configured for publishing: {5}.",
-                                    routeMap.Name, route.Name, messageTypeName, routingKey.MessageType.Name, endpoint, error).AppendLine();
+                                errorMessage
+                                    .AppendFormat(
+                                        "Route '{1}' within bounded context '{0}' for {2} type '{3}' has resolved endpoint {4} that is not properly configured for publishing: {5}.",
+                                        routeMap.Name,
+                                        route.Name,
+                                        messageTypeName,
+                                        routingKey.MessageType.Name,
+                                        endpoint, error)
+                                    .AppendLine();
                                 result = false;
                             }
 
-                            log.AppendFormat("\t\tPublishing  '{0}' to {1}\t{2}", routingKey.MessageType.Name, endpoint, result ? "OK" : "ERROR:" + error).AppendLine();
+                            log.AppendFormat(
+                                    "\t\tPublishing  '{0}' to {1}\t{2}",
+                                    routingKey.MessageType.Name,
+                                    endpoint,
+                                    result ? "OK" : "ERROR:" + error)
+                                .AppendLine();
                         }
 
                         if (routingKey.CommunicationType == CommunicationType.Subscribe)
                         {
                             if (!m_MessagingEngine.VerifyEndpoint(endpoint, EndpointUsage.Subscribe, m_CreateMissingEndpoints, out error))
                             {
-                                errorMessage.AppendFormat(
-                                    "Route '{1}' within bounded context '{0}' for {2} type '{3}' has resolved endpoint {4} that is not properly configured for subscription: {5}.",
-                                    routeMap.Name, route.Name, messageTypeName, routingKey.MessageType.Name, endpoint, error).AppendLine();
+                                errorMessage
+                                    .AppendFormat(
+                                        "Route '{1}' within bounded context '{0}' for {2} type '{3}' has resolved endpoint {4} that is not properly configured for subscription: {5}.",
+                                        routeMap.Name,
+                                        route.Name,
+                                        messageTypeName,
+                                        routingKey.MessageType.Name,
+                                        endpoint,
+                                        error)
+                                    .AppendLine();
                                 result = false;
                             }
 
-                            log.AppendFormat("\t\tSubscribing '{0}' on {1}\t{2}", routingKey.MessageType.Name, endpoint, result ? "OK" : "ERROR:" + error).AppendLine();
+                            log.AppendFormat(
+                                    "\t\tSubscribing '{0}' on {1}\t{2}",
+                                    routingKey.MessageType.Name,
+                                    endpoint,
+                                    result ? "OK" : "ERROR:" + error)
+                                .AppendLine();
                         }
                         allEndpointsAreValid = allEndpointsAreValid && result;
                     }
-                    
                 }
             }
 
             if (!allEndpointsAreValid)
-                throw new ApplicationException(errorMessage.ToString());            
+                throw new ApplicationException(errorMessage.ToString());
         }
-
 
         [MethodImpl(MethodImplOptions.Synchronized)]
         public void Dispose()
@@ -262,8 +304,15 @@ namespace Lykke.Cqrs
         {
             if (disposing)
             {
-                Contexts.Where(b => b != null).Select(c=>c.Processes).Where(p=>p!=null).SelectMany(p=>p).ToList().ForEach(process => process.Dispose());
-                Contexts.Where(b => b != null).ToList().ForEach(context => context.Dispose());
+                Contexts
+                    .Where(b => b != null && b.Processes != null)
+                    .SelectMany(p => p.Processes)
+                    .ToList()
+                    .ForEach(process => process.Dispose());
+                Contexts
+                    .Where(b => b != null)
+                    .ToList()
+                    .ForEach(context => context.Dispose());
 
                 if (m_Subscription != null)
                     m_Subscription.Dispose();
@@ -272,7 +321,7 @@ namespace Lykke.Cqrs
 
         public void SendCommand<T>(T command, string boundedContext, string remoteBoundedContext, uint priority = 0)
         {
-            if (!sendMessage(typeof (T), command, RouteType.Commands, boundedContext, priority, remoteBoundedContext))
+            if (!SendMessage(typeof (T), command, RouteType.Commands, boundedContext, priority, remoteBoundedContext))
             {
                 if(boundedContext!=null)
                     throw new InvalidOperationException(string.Format("bound context '{0}' does not support command '{1}' with priority {2}", boundedContext, typeof(T), priority));
@@ -280,7 +329,7 @@ namespace Lykke.Cqrs
             }
         }
 
-        private bool sendMessage(Type type, object message, RouteType routeType, string context, uint priority, string remoteBoundedContext=null)
+        private bool SendMessage(Type type, object message, RouteType routeType, string context, uint priority, string remoteBoundedContext = null)
         {
             RouteMap routeMap = DefaultRouteMap;
             if (context != null)
@@ -297,12 +346,12 @@ namespace Lykke.Cqrs
                 published = DefaultRouteMap.PublishMessage(m_MessagingEngine,type,message, routeType, priority, remoteBoundedContext);
             }
             return published;
-        }        
+        }
 
         internal void PublishEvent(object @event, string boundedContext)
         {
             if (@event == null) throw new ArgumentNullException("event");
-            if (!sendMessage(@event.GetType(), @event, RouteType.Events, boundedContext, 0))
+            if (!SendMessage(@event.GetType(), @event, RouteType.Events, boundedContext, 0))
                 throw new InvalidOperationException(string.Format("bound context '{0}' does not support event '{1}'", boundedContext, @event.GetType()));
         }
 
@@ -310,14 +359,5 @@ namespace Lykke.Cqrs
         {
             m_MessagingEngine.Send(@event, endpoint, processingGroup,headers);
         }
-
-        internal IDependencyResolver DependencyResolver {
-            get { return m_DependencyResolver; }
-        }        
-    }
-
-    public interface ICqrsEngine
-    {   
-        void SendCommand<T>(T command, string boundedContext, string remoteBoundedContext, uint priority = 0);
     }
 }

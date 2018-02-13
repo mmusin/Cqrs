@@ -17,7 +17,7 @@ namespace Inceptum.Cqrs.Configuration.Routing
         protected RouteDescriptorBase(TRegistration registration)
             : base(registration)
         {
-            EndpointResolver=new MapEndpointResolver();
+            EndpointResolver = new MapEndpointResolver();
         }
 
         internal void AddExplicitEndpoint(Func<RoutingKey, bool> criteria, string endpoint)

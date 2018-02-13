@@ -58,7 +58,6 @@ namespace Inceptum.Cqrs.Tests
         }
     }
 
-
     internal class EventListenerWithBatchSupport  
     {
         public readonly List<FakeDbSession> Sessions = new List<FakeDbSession>();
@@ -80,8 +79,6 @@ namespace Inceptum.Cqrs.Tests
         }
     }
 
-
-
     internal class EventListener
     {
         public readonly List<Tuple<string, string>> EventsWithBoundedContext = new List<Tuple<string, string>>();
@@ -92,8 +89,6 @@ namespace Inceptum.Cqrs.Tests
             EventsWithBoundedContext.Add(Tuple.Create(m, boundedContext));
             Console.WriteLine(boundedContext + ":" + m);
         }
- 
-
     }
 
     internal class FakeDbSession
@@ -117,7 +112,6 @@ namespace Inceptum.Cqrs.Tests
         }
     }
 
-
     class CqrEngineDependentComponent
     {
         public static bool Started { get; set; }
@@ -133,9 +127,7 @@ namespace Inceptum.Cqrs.Tests
     [TestFixture]
     public class CqrsFacilityTests
     {
-
-
-        [Test]        
+        [Test]
         public void ComponentCanNotBeProjectionAndCommandsHandlerSimultaneousely()
         {
             using (var container = new WindsorContainer())
@@ -258,7 +250,6 @@ namespace Inceptum.Cqrs.Tests
             }
         }
 
-
         [Test]
         public void DependencyOnICommandSenderTest()
         {
@@ -320,7 +311,6 @@ namespace Inceptum.Cqrs.Tests
                 Assert.That(acknowledged, Is.EqualTo(false));
             }
         }
-
 
         [Test]
         public void CommandsHandlerWithResultAndCommandOriginEndpointWiringTest()
@@ -425,11 +415,9 @@ namespace Inceptum.Cqrs.Tests
         //}
     }
 
-
     [ProtoContract]
     public class CashOutCreatedEvent
     {
-
     }
 
     [ProtoContract]
@@ -438,7 +426,6 @@ namespace Inceptum.Cqrs.Tests
         [ProtoMember(1)]
         public string Payload { get; set; }
     }
-
 
     public class TestSaga
     {
@@ -455,7 +442,6 @@ namespace Inceptum.Cqrs.Tests
         }
     }
 
-
     public class CommandSenderDependentComponent
     {
         public ICommandSender CommandSender { get; private set; }
@@ -464,5 +450,5 @@ namespace Inceptum.Cqrs.Tests
         {
             CommandSender = commandSender;
         }
-    }    
+    }
 }

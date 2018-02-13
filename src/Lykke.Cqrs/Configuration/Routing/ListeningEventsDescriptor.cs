@@ -37,10 +37,14 @@ namespace Inceptum.Cqrs.Configuration.Routing
 
         public override void Create(IRouteMap routeMap, IDependencyResolver resolver)
         {
-    
             foreach (var type in m_Types)
             {
-                routeMap[Route].AddSubscribedEvent(type, 0, m_BoundedContext, EndpointResolver,typeof(TRegistration)!=typeof(ISagaRegistration));
+                routeMap[Route].AddSubscribedEvent(
+                    type,
+                    0,
+                    m_BoundedContext,
+                    EndpointResolver,
+                    typeof(TRegistration) != typeof(ISagaRegistration));
             }
         }
 
@@ -48,6 +52,5 @@ namespace Inceptum.Cqrs.Configuration.Routing
         {
             EndpointResolver.SetFallbackResolver(cqrsEngine.EndpointResolver);
         }
-
     }
 }

@@ -3,9 +3,7 @@ using System.Linq.Expressions;
 
 namespace Lykke.Cqrs
 {
-    //TODO: arrange thid crap
-
-
+    //TODO: arrange this crap
     abstract class OptionalParameter
     {
         public object Value { get; protected set; }
@@ -51,7 +49,7 @@ namespace Lykke.Cqrs
             Value = value;
             Type = typeof (T);
         }
-        
+
         public OptionalParameter(T value)
         {
             Value = value;

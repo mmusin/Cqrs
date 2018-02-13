@@ -16,7 +16,6 @@ namespace Inceptum.Cqrs.Configuration.Routing
             Descriptor = this;
         }
 
-
         public override IEnumerable<Type> GetDependencies()
         {
             return new Type[0];
@@ -31,8 +30,6 @@ namespace Inceptum.Cqrs.Configuration.Routing
 
         public override void Create(IRouteMap routeMap, IDependencyResolver resolver)
         {
-          
-
             foreach (var type in Types)
             {
                 if (LowestPriority > 0)
@@ -48,7 +45,6 @@ namespace Inceptum.Cqrs.Configuration.Routing
                 }
             }
         }
-
 
         public override void Process(IRouteMap routeMap, CqrsEngine cqrsEngine)
         {

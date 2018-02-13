@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.Threading;
 using Common.Log;
 using Inceptum.Cqrs.Configuration;
-using Inceptum.Cqrs.Routing;
 using Inceptum.Messaging;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
@@ -20,8 +18,6 @@ namespace Inceptum.Cqrs.Tests
     class CommandHandler
     {
         public List<object> AcceptedCommands = new List<object>();
-        private readonly ICommandSender m_Engine;
-        private int counter = 0;
         private int m_ProcessingTimeout;
 
         public CommandHandler(int processingTimeout)
@@ -42,7 +38,7 @@ namespace Inceptum.Cqrs.Tests
             eventPublisher.PublishEvent(new CashOutCreatedEvent());
         }
     }
-    
+
     [TestFixture]
     public class CqrsEngineTests
     {
@@ -214,7 +210,6 @@ namespace Inceptum.Cqrs.Tests
                    );
             }
         }
-
 
         [Test]
         public void PrioritizedCommandsProcessingTest()
@@ -396,42 +391,40 @@ namespace Inceptum.Cqrs.Tests
             Console.WriteLine("Dispose completed.");
         }
 
-
         /*
+        [Test]
+        [Ignore("Does not work on tc")]
+        public void EventStoreTest()
+        {
+            var log = MockRepository.GenerateMock<ILog>();
+            var eventStoreConnection = EventStoreConnection.Create(ConnectionSettings.Default,
+                                                                    new IPEndPoint(IPAddress.Loopback, 1113));
+            eventStoreConnection.Connect();
+            using (var engine = new InMemoryCqrsEngine(
+                BoundedConfiguration.Context.BoundedContext("local")
+                                    .PublishingEvents(typeof (int), typeof (TestAggregateRootNameChangedEvent),
+                                                        typeof (TestAggregateRootCreatedEvent))
+                                    .To("events")
+                                    .RoutedTo("events")
+                                    .ListeningCommands(typeof (string)).On("commands1").RoutedFromSameEndpoint()
+                                    .WithCommandsHandler<CommandHandler>()
+                                    .WithProcess<TestProcess>()
+                                    .WithEventStore(dispatchCommits => Wireup.Init()
+                                                                            .LogTo(type => log)
+                                                                            .UsingInMemoryPersistence()
+                                                                            .InitializeStorageEngine()
+                                                                            .UsingJsonSerialization()
+                                                                            .UsingSynchronousDispatchScheduler()
+                                                                            .DispatchTo(dispatchCommits))
+                ))
+            {
+                engine.SendCommand("test", "local", "local");
 
-                [Test]
-                [Ignore("Does not work on tc")]
-                public void EventStoreTest()
-                {
-                    var log = MockRepository.GenerateMock<ILog>();
-                    var eventStoreConnection = EventStoreConnection.Create(ConnectionSettings.Default,
-                                                                           new IPEndPoint(IPAddress.Loopback, 1113));
-                    eventStoreConnection.Connect();
-                    using (var engine = new InMemoryCqrsEngine(
-                        BoundedConfiguration.Context.BoundedContext("local")
-                                           .PublishingEvents(typeof (int), typeof (TestAggregateRootNameChangedEvent),
-                                                             typeof (TestAggregateRootCreatedEvent))
-                                           .To("events")
-                                           .RoutedTo("events")
-                                           .ListeningCommands(typeof (string)).On("commands1").RoutedFromSameEndpoint()
-                                           .WithCommandsHandler<CommandHandler>()
-                                           .WithProcess<TestProcess>()
-                                           .WithEventStore(dispatchCommits => Wireup.Init()
-                                                                                    .LogTo(type => log)
-                                                                                    .UsingInMemoryPersistence()
-                                                                                    .InitializeStorageEngine()
-                                                                                    .UsingJsonSerialization()
-                                                                                    .UsingSynchronousDispatchScheduler()
-                                                                                    .DispatchTo(dispatchCommits))
-                        ))
-                    {
-                        engine.SendCommand("test", "local", "local");
-
-                        Thread.Sleep(500);
-                        Console.WriteLine("Disposing...");
-                    }
-                    Console.WriteLine("Dispose completed.");
-                }
+                Thread.Sleep(500);
+                Console.WriteLine("Disposing...");
+            }
+            Console.WriteLine("Dispose completed.");
+        }
         */
 
         // TODO: upgrade to Moq
@@ -540,10 +533,10 @@ namespace Inceptum.Cqrs.Tests
 
         public TestProcess()
         {
-            workerThread = new Thread(sendCommands);
+            workerThread = new Thread(SendCommands);
         }
 
-        private void sendCommands(object obj)
+        private void SendCommands(object obj)
         {
 
             int i = 0;
@@ -562,8 +555,6 @@ namespace Inceptum.Cqrs.Tests
             Started.Set();
         }
 
-
-
         public void Dispose()
         {
             Console.WriteLine("Test process disposed");
@@ -579,10 +570,10 @@ namespace Inceptum.Cqrs.Tests
 
         public TestProcess1()
         {
-            m_WorkerThread = new Thread(sendCommands);
+            m_WorkerThread = new Thread(SendCommands);
         }
 
-        private void sendCommands(object obj)
+        private void SendCommands(object obj)
         {
 
             int i = 0;
@@ -604,6 +595,4 @@ namespace Inceptum.Cqrs.Tests
             m_WorkerThread.Join();
         }
     }
-
-
 }
