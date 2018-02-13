@@ -15,7 +15,8 @@ namespace Lykke.Cqrs
 
         public void PublishEvent(object @event)
         {
-            if (@event == null) throw new ArgumentNullException("event");
+            if (@event == null)
+                throw new ArgumentNullException("event");
             m_CqrsEngine.PublishEvent(@event, m_Context.Name);
         }
     }

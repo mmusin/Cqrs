@@ -31,14 +31,16 @@ namespace Lykke.Cqrs.Configuration.BoundedContext
  
         public IBoundedContextRegistration FailedCommandRetryDelay(long delay)
         {
-            if (delay < 0) throw new ArgumentException("threadCount should be greater or equal to 0", "delay");
+            if (delay < 0)
+                throw new ArgumentException("threadCount should be greater or equal to 0", "delay");
             FailedCommandRetryDelayInternal = delay;
             return this;
         }
 
         public IBoundedContextRegistration WithCommandsHandler(object handler)
         {
-            if (handler == null) throw new ArgumentNullException("handler");
+            if (handler == null)
+                throw new ArgumentNullException("handler");
             AddDescriptor(new CommandsHandlerDescriptor(handler));
             return this;
         }
@@ -57,7 +59,8 @@ namespace Lykke.Cqrs.Configuration.BoundedContext
 
         public IBoundedContextRegistration WithCommandsHandler(Type handler)
         {
-            if (handler == null) throw new ArgumentNullException("handler");
+            if (handler == null)
+                throw new ArgumentNullException("handler");
             AddDescriptor(new CommandsHandlerDescriptor(handler));
             return this;
         }
@@ -153,7 +156,8 @@ namespace Lykke.Cqrs.Configuration.BoundedContext
             Func<TProjection, TBatchContext> beforeBatchApply,
             Action<TProjection, TBatchContext> afterBatchApply)
         {
-            if (projection == null) throw new ArgumentNullException("projection");
+            if (projection == null)
+                throw new ArgumentNullException("projection");
             Func<object, object> beforeApply = (beforeBatchApply == null) 
                 ? (Func<object, object>)null 
                 : o => beforeBatchApply((TProjection)o);
@@ -181,7 +185,8 @@ namespace Lykke.Cqrs.Configuration.BoundedContext
             Func<object, object> beforeBatchApply = null,
             Action<object, object> afterBatchApply = null)
         {
-            if (projection == null) throw new ArgumentNullException("projection");
+            if (projection == null)
+                throw new ArgumentNullException("projection");
             AddDescriptor(
                 new ProjectionDescriptor(
                     projection,
@@ -202,7 +207,8 @@ namespace Lykke.Cqrs.Configuration.BoundedContext
            Func<object, object> beforeBatchApply = null,
            Action<object, object> afterBatchApply = null)
         {
-            if (projection == null) throw new ArgumentNullException("projection");
+            if (projection == null)
+                throw new ArgumentNullException("projection");
             AddDescriptor(
                 new ProjectionDescriptor(
                     projection,
