@@ -1,7 +1,7 @@
-﻿using Inceptum.Cqrs.Configuration.BoundedContext;
-using Inceptum.Cqrs.Configuration.Routing;
+﻿using Lykke.Cqrs.Configuration.BoundedContext;
+using Lykke.Cqrs.Configuration.Routing;
 
-namespace Inceptum.Cqrs.Configuration
+namespace Lykke.Cqrs.Configuration
 {
 	public static class BoundedContextRegistrationExtensions
     {

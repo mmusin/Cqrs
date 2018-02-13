@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Lykke.Cqrs;
 
-namespace Inceptum.Cqrs.Configuration.Routing
+namespace Lykke.Cqrs.Configuration.Routing
 {
     public abstract class ListeningRouteDescriptor<TDescriptor,TRegistration> 
         : RouteDescriptorBase<TDescriptor,TRegistration>, IListeningRouteDescriptor<TDescriptor> 

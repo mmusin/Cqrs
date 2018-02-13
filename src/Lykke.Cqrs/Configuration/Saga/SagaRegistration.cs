@@ -1,7 +1,6 @@
 using System;
-using Lykke.Cqrs;
 
-namespace Inceptum.Cqrs.Configuration.Saga
+namespace Lykke.Cqrs.Configuration.Saga
 {
     public class SagaRegistration : ContextRegistrationBase<ISagaRegistration>, ISagaRegistration
     {

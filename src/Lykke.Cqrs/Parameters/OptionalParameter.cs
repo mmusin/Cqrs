@@ -1,6 +1,5 @@
 ﻿namespace Lykke.Cqrs
 {
-
     internal class OptionalParameter<T> : OptionalParameterBase
     {
         public OptionalParameter(string name,T value)

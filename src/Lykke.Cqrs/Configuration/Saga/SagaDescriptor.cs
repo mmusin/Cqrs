@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Lykke.Cqrs;
 
-namespace Inceptum.Cqrs.Configuration.Saga
+namespace Lykke.Cqrs.Configuration.Saga
 {
     internal class SagaDescriptor : DescriptorWithDependencies<Context>
     {

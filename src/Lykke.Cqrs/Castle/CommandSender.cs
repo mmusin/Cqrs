@@ -1,7 +1,6 @@
 ﻿using Castle.MicroKernel;
-using Lykke.Cqrs;
 
-namespace Inceptum.Cqrs.Castle
+namespace Lykke.Cqrs.Castle
 {
     //TODO: should be injected by cqrs with preset local BC
     internal class CommandSender : ICommandSender

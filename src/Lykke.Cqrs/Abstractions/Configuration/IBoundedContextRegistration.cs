@@ -1,8 +1,7 @@
 using System;
-using Inceptum.Cqrs.Configuration.Routing;
-using Lykke.Cqrs;
+using Lykke.Cqrs.Configuration.Routing;
 
-namespace Inceptum.Cqrs.Configuration.BoundedContext
+namespace Lykke.Cqrs.Configuration.BoundedContext
 {
     public interface IBoundedContextRegistration : IRegistration, IHideObjectMembers
     {

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Inceptum.Cqrs.Routing;
+using Lykke.Cqrs.Routing;
 
 namespace Lykke.Cqrs
 {

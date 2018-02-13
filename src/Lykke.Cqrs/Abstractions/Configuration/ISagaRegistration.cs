@@ -1,7 +1,7 @@
 using System;
-using Inceptum.Cqrs.Configuration.Routing;
+using Lykke.Cqrs.Configuration.Routing;
 
-namespace Inceptum.Cqrs.Configuration.Saga
+namespace Lykke.Cqrs.Configuration.Saga
 {
     public interface ISagaRegistration : IRegistration, IHideObjectMembers
     {

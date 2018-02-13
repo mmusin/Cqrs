@@ -5,9 +5,9 @@ using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Common.Log;
-using Inceptum.Cqrs.Configuration;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
+using Lykke.Cqrs.Configuration;
 
 namespace Lykke.Cqrs
 {

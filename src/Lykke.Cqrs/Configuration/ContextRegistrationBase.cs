@@ -1,8 +1,7 @@
 using System;
-using Inceptum.Cqrs.Configuration.Routing;
-using Lykke.Cqrs;
+using Lykke.Cqrs.Configuration.Routing;
 
-namespace Inceptum.Cqrs.Configuration
+namespace Lykke.Cqrs.Configuration
 {
     public abstract class ContextRegistrationBase<TRegistration> : RegistrationBase<TRegistration, Context> where TRegistration : class, IRegistration
     {

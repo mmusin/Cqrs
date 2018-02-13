@@ -1,6 +1,4 @@
-using Lykke.Cqrs;
-
-namespace Inceptum.Cqrs.Configuration.Routing
+namespace Lykke.Cqrs.Configuration.Routing
 {
     public interface IPublishingRouteDescriptor<out T> : IDescriptor<IRouteMap> 
     {

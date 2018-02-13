@@ -7,13 +7,11 @@ using Castle.MicroKernel;
 using Castle.MicroKernel.Context;
 using Castle.MicroKernel.Facilities;
 using Castle.MicroKernel.Registration;
-using Inceptum.Cqrs.Configuration;
-using Inceptum.Cqrs.Configuration.BoundedContext;
-using Lykke.Cqrs;
-using IDependencyResolver = Lykke.Cqrs.IDependencyResolver;
-using IRegistration = Inceptum.Cqrs.Configuration.IRegistration;
+using Lykke.Cqrs.Configuration;
+using Lykke.Cqrs.Configuration.BoundedContext;
+using IRegistration = Lykke.Cqrs.Configuration.IRegistration;
 
-namespace Inceptum.Cqrs.Castle
+namespace Lykke.Cqrs.Castle
 {
     public class CqrsFacility : AbstractFacility, ICqrsEngineBootstrapper
     {

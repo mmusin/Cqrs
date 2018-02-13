@@ -1,4 +1,4 @@
-﻿namespace Inceptum.Cqrs.Configuration.Routing
+﻿namespace Lykke.Cqrs.Configuration.Routing
 {
     public interface IPublishingCommandsDescriptor<TRegistration> where TRegistration : IRegistration
     {
