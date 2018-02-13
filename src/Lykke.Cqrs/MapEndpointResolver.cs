@@ -7,35 +7,6 @@ using Inceptum.Messaging.Contract;
 
 namespace Lykke.Cqrs
 {
-    public enum RouteType
-    {
-        Commands,
-        Events
-    }
-
-    public enum CommunicationType
-    {
-        Publish,
-        Subscribe,
-    }
-
-    public interface IEndpointResolver
-    {
-        Endpoint Resolve(string route, RoutingKey key, IEndpointProvider endpointProvider);
-    }
-
-    public class DefaultEndpointResolver : IEndpointResolver
-    {
-        public Endpoint Resolve(string route, RoutingKey key, IEndpointProvider endpointProvider)
-        {
-            if (endpointProvider.Contains(route))
-            {
-                return endpointProvider.Get(route);
-            }
-            throw new ApplicationException(string.Format("Endpoint '{0}' not found",route));
-        }
-    }
-
     public class MapEndpointResolver : IEndpointResolver
     {
         private IEndpointResolver m_FallbackResolver;

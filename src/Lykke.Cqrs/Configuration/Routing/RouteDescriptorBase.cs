@@ -8,9 +8,9 @@ namespace Inceptum.Cqrs.Configuration.Routing
     public abstract class RouteDescriptorBase<TRegistration> : RegistrationWrapper<TRegistration> where TRegistration : IRegistration
     {
         private readonly Dictionary<Func<RoutingKey, bool>, string> m_ExplicitEndpointSelectors = new Dictionary<Func<RoutingKey, bool>, string>();
+
         protected IEndpointResolver FallbackResolverResolver { get; private set; }
         protected MapEndpointResolver EndpointResolver { get; private set; }
- 
 
         protected uint LowestPriority { get; set; }
 
@@ -24,20 +24,16 @@ namespace Inceptum.Cqrs.Configuration.Routing
         {
             EndpointResolver.AddSelector(criteria, endpoint);
         }
- 
     }
 
     public abstract class RouteDescriptorBase<TDescriptor, TRegistration> : RouteDescriptorBase<TRegistration> 
         where TDescriptor : RouteDescriptorBase<TRegistration> 
         where TRegistration : IRegistration
     {
-
-
         protected RouteDescriptorBase(TRegistration registration)
             : base(registration)
         {
         }
-
 
         public ExplicitEndpointDescriptor<TDescriptor, TRegistration> WithEndpoint(string endpoint)
         {
@@ -49,10 +45,5 @@ namespace Inceptum.Cqrs.Configuration.Routing
             EndpointResolver.SetFallbackResolver(resolver,true);
             return this as TDescriptor;
         }
-
-        
     }
-
-   
-   
 }

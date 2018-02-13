@@ -12,7 +12,7 @@ using ThreadState = System.Threading.ThreadState;
 
 namespace Lykke.Cqrs
 {
-    internal class EventDispatcher:IDisposable
+    internal class EventDispatcher : IDisposable
     {
         readonly Dictionary<EventOrigin, List<Tuple<Func<object[],object, CommandHandlingResult[]>,BatchManager>>> m_Handlers =
             new Dictionary<EventOrigin, List<Tuple<Func<object[],object, CommandHandlingResult[]>, BatchManager>>>();
@@ -46,7 +46,7 @@ namespace Lykke.Cqrs
             }
         }
 
-        public void Wire(string fromBoundedContext,object o, params OptionalParameter[] parameters)
+        public void Wire(string fromBoundedContext,object o, params OptionalParameterBase[] parameters)
         {
 
             //TODO: decide whet to pass as context here
@@ -61,7 +61,7 @@ namespace Lykke.Cqrs
             Type batchContextType,
             Func<object, object> beforeBatchApply,
             Action<object, object> afterBatchApply,
-            params OptionalParameter[] parameters)
+            params OptionalParameterBase[] parameters)
         {
             Func<object> beforeBatchApplyWrap = beforeBatchApply == null ? (Func<object>)null : () => beforeBatchApply(o);
             Action<object> afterBatchApplyWrap = afterBatchApply == null ? (Action<object>)null : c => afterBatchApply(o, c); 
@@ -87,13 +87,13 @@ namespace Lykke.Cqrs
             object o,
             BatchManager batchManager,
             Type batchContextType,
-            params OptionalParameter[] parameters)
+            params OptionalParameterBase[] parameters)
         {
             if (batchManager != null && m_ApplyBatchesThread.ThreadState == ThreadState.Unstarted && batchManager.ApplyTimeout != 0)
                 m_ApplyBatchesThread.Start();
 
             var batchContextParameter = new ExpressionParameter(null,batchContextType);
-            parameters = parameters.Concat(new OptionalParameter[]
+            parameters = parameters.Concat(new OptionalParameterBase[]
             {
                 new OptionalParameter<string>("boundedContext", fromBoundedContext)
             }).ToArray();
@@ -153,7 +153,7 @@ namespace Lykke.Cqrs
         private Func<object[], object, CommandHandlingResult[]> CreateBatchHandler(
             Type eventType,
             object o,
-            IEnumerable<OptionalParameter> optionalParameters,
+            IEnumerable<OptionalParameterBase> optionalParameters,
             ExpressionParameter batchContext)
         {
             LabelTarget returnTarget = Expression.Label(typeof(CommandHandlingResult[]));
@@ -189,7 +189,7 @@ namespace Lykke.Cqrs
         private Func<object[], object, CommandHandlingResult[]> CreateHandler(
             Type eventType,
             object o,
-            IEnumerable<OptionalParameter> optionalParameters,
+            IEnumerable<OptionalParameterBase> optionalParameters,
             bool returnsResult,
             ExpressionParameter batchContext)
         {

@@ -5,18 +5,13 @@ using Lykke.Cqrs;
 
 namespace Inceptum.Cqrs.Configuration.Routing
 {
-    public interface IListeningEventsDescriptor<TRegistration> where TRegistration : IRegistration
-    {
-        IListeningRouteDescriptor<ListeningEventsDescriptor<TRegistration>> From(string boundedContext);
-    }
-
     public class ListeningEventsDescriptor<TRegistration> 
         : ListeningRouteDescriptor<ListeningEventsDescriptor<TRegistration>,TRegistration>, IListeningEventsDescriptor<TRegistration>
         where TRegistration : IRegistration
     {
         private string m_BoundedContext;
         private readonly Type[] m_Types;
-    
+
         public ListeningEventsDescriptor(TRegistration registration, Type[] types)
             : base(registration)
         {

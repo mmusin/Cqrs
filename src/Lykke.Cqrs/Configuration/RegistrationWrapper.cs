@@ -4,12 +4,6 @@ using Lykke.Cqrs;
 
 namespace Inceptum.Cqrs.Configuration
 {
-    public interface IRegistrationWrapper<out T> : IRegistration
-        where T : IRegistration
-    {
-        T Registration { get; }
-    }
-
     public abstract class RegistrationWrapper<T> : IRegistrationWrapper<T>
         where T : IRegistration
     {

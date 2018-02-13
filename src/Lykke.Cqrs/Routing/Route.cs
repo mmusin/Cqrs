@@ -9,7 +9,7 @@ using Lykke.Cqrs;
 
 namespace Inceptum.Cqrs.Routing
 {
-    public class Route 
+    public class Route
     {
         private readonly Dictionary<RoutingKey,Endpoint> m_MessageRoutes =new Dictionary<RoutingKey, Endpoint>();
         private readonly Dictionary<RoutingKey, IEndpointResolver> m_RouteResolvers = new Dictionary<RoutingKey, IEndpointResolver>();
