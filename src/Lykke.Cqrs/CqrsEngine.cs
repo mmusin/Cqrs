@@ -8,6 +8,7 @@ using Common.Log;
 using Inceptum.Messaging.Configuration;
 using Inceptum.Messaging.Contract;
 using Lykke.Cqrs.Configuration;
+using Lykke.Cqrs.Utils;
 
 namespace Lykke.Cqrs
 {
@@ -311,12 +312,27 @@ namespace Lykke.Cqrs
                     throw new ArgumentException(string.Format("bound context {0} not found", context), "context");
                 }
             }
-            var published = routeMap.PublishMessage(m_MessagingEngine, type, message, routeType, priority, remoteBoundedContext);
-            if (!published && routeType == RouteType.Commands)
+            var telemtryOperation = TelemetryHelper.InitTelemetryOperation(
+                routeType == RouteType.Commands ? "Cqrs send command" : "Cqrs publish event",
+                type.Name,
+                context,
+                remoteBoundedContext);
+            try
             {
-                published = DefaultRouteMap.PublishMessage(m_MessagingEngine, type, message, routeType, priority, remoteBoundedContext);
+                var published = routeMap.PublishMessage(m_MessagingEngine, type, message, routeType, priority, remoteBoundedContext);
+                if (!published && routeType == RouteType.Commands)
+                    published = DefaultRouteMap.PublishMessage(m_MessagingEngine, type, message, routeType, priority, remoteBoundedContext);
+                return published;
             }
-            return published;
+            catch (Exception e)
+            {
+                TelemetryHelper.SubmitException(telemtryOperation, e);
+                throw;
+            }
+            finally
+            {
+                TelemetryHelper.SubmitOperationResult(telemtryOperation);
+            }
         }
 
         /*
