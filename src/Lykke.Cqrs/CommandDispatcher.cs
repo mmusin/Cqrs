@@ -190,7 +190,6 @@ namespace Lykke.Cqrs
                 commandType,
                 route,
                 commandOriginEndpoint.ToString());
-            bool isFailed = false;
             try
             {
                 var result = handler(command, commandOriginEndpoint, route);
@@ -209,13 +208,10 @@ namespace Lykke.Cqrs
                 acknowledge(m_FailedCommandRetryDelay, false);
 
                 TelemetryHelper.SubmitException(telemtryOperation, e);
-
-                isFailed = true;
             }
             finally
             {
-                if (!isFailed)
-                    TelemetryHelper.SubmitOperationResult(telemtryOperation);
+                TelemetryHelper.SubmitOperationResult(telemtryOperation);
             }
         }
 

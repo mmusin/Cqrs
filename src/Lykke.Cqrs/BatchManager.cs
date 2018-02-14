@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Common.Log;
 using Inceptum.Messaging.Contract;
+using Common.Log;
+using Lykke.Cqrs.Utils;
 
 namespace Lykke.Cqrs
 {
@@ -29,7 +30,7 @@ namespace Lykke.Cqrs
             Func<object> beforeBatchApply = null,
             Action<object> afterBatchApply = null)
         {
-            m_AfterBatchApply = afterBatchApply??(o=>{});
+            m_AfterBatchApply = afterBatchApply??(o => {});
             m_BeforeBatchApply = beforeBatchApply ?? (() =>  null );
             _log = log;
             m_FailedEventRetryDelay = failedEventRetryDelay;
@@ -102,7 +103,27 @@ namespace Lykke.Cqrs
             try
             {
                 var eventsArray = @events.Select(e => e.Item1).ToArray();
-                var handleResults = handlers.Select(h => h(eventsArray, batchContext)).ToArray();
+                var handleResults = new CommandHandlingResult[handlers.Length][];
+                for(int i = 0; i < handlers.Length; ++i)
+                {
+                    var telemtryOperation = TelemetryHelper.InitTelemetryOperation(
+                        "Cqrs handle events",
+                        origin.EventType.Name,
+                        origin.BoundedContext,
+                        batchContext?.ToString());
+                    try
+                    {
+                        handleResults[i] = handlers[i](eventsArray, batchContext);
+                    }
+                    catch (Exception ex)
+                    {
+                        TelemetryHelper.SubmitException(telemtryOperation, ex);
+                    }
+                    finally
+                    {
+                        TelemetryHelper.SubmitOperationResult(telemtryOperation);
+                    }
+                }
 
                 results = Enumerable
                     .Range(0, eventsArray.Length)
@@ -127,7 +148,9 @@ namespace Lykke.Cqrs
                     nameof(DoHandle),
                     "Failed to handle events batch of type " + origin.EventType.Name,
                     e);
-                results = @events.Select(x => new CommandHandlingResult {Retry = true, RetryDelay = m_FailedEventRetryDelay}).ToArray();
+                results = @events
+                    .Select(x => new CommandHandlingResult { Retry = true, RetryDelay = m_FailedEventRetryDelay })
+                    .ToArray();
             }
 
             for (var i = 0; i < events.Length; i++)
