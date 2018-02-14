@@ -118,6 +118,7 @@ namespace Lykke.Cqrs
                     catch (Exception ex)
                     {
                         TelemetryHelper.SubmitException(telemtryOperation, ex);
+                        throw;
                     }
                     finally
                     {
