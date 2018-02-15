@@ -82,7 +82,7 @@ namespace Lykke.Cqrs
             EndpointResolver = new DefaultEndpointResolver();
             m_MessagingEngine = messagingEngine;
             m_EndpointProvider = endpointProvider;
-            m_Contexts=new List<Context>();
+            m_Contexts = new List<Context>();
             DefaultRouteMap = new RouteMap("default");
             Init();
         }
@@ -111,7 +111,7 @@ namespace Lykke.Cqrs
                         {
                             type = r.Key.MessageType,
                             priority = r.Key.Priority,
-                            remoteBoundedContext=r.Key.RemoteBoundedContext,
+                            remoteBoundedContext = r.Key.RemoteBoundedContext,
                             endpoint = new Endpoint(
                                 r.Value.TransportId,
                                 "",
@@ -119,13 +119,13 @@ namespace Lykke.Cqrs
                                 r.Value.SharedDestination,
                                 r.Value.SerializationFormat)
                         })
-                        .GroupBy(x => Tuple.Create(x.endpoint, x.priority,x.remoteBoundedContext))
+                        .GroupBy(x => Tuple.Create(x.endpoint, x.priority, x.remoteBoundedContext))
                         .Select(g => new
                         {
                             endpoint = g.Key.Item1,
                             priority = g.Key.Item2,
-                            remoteBoundedContext =g.Key.Item3,
-                            types = g.Select(x=>x.type).ToArray()
+                            remoteBoundedContext = g.Key.Item3,
+                            types = g.Select(x => x.type).ToArray()
                         });
 
                     foreach (var subscription in subscriptions)
@@ -134,8 +134,8 @@ namespace Lykke.Cqrs
                         var routeName = route.Name;
                         var endpoint = subscription.endpoint;
                         var remoteBoundedContext = subscription.remoteBoundedContext;
-                        CallbackDelegate<object> callback=null;
-                        string messageTypeName=null;
+                        CallbackDelegate<object> callback = null;
+                        string messageTypeName = null;
                         switch (route.Type)
                         {
                             case RouteType.Events:
@@ -153,7 +153,7 @@ namespace Lykke.Cqrs
                             callback,
                             (type, acknowledge) =>
                             {
-                                throw new InvalidOperationException(string.Format("Unknown {0} received: {1}",messageTypeName, type));
+                                throw new InvalidOperationException(string.Format("Unknown {0} received: {1}", messageTypeName, type));
                                 //acknowledge(0, true);
                             },
                             processingGroup,
@@ -172,7 +172,7 @@ namespace Lykke.Cqrs
         private void EnsureEndpoints()
         {
             var allEndpointsAreValid = true;
-            var errorMessage=new StringBuilder("Some endpoints are not valid:").AppendLine();
+            var errorMessage = new StringBuilder("Some endpoints are not valid:").AppendLine();
             var log = new StringBuilder();
             log.Append("Endpoints verification").AppendLine();
 
@@ -180,18 +180,18 @@ namespace Lykke.Cqrs
             {
                 foreach (var route in context)
                 {
-                    m_MessagingEngine.AddProcessingGroup(route.ProcessingGroupName,route.ProcessingGroup);
+                    m_MessagingEngine.AddProcessingGroup(route.ProcessingGroupName, route.ProcessingGroup);
                 }
             }
 
             foreach (var routeMap in (new[] { DefaultRouteMap }).Concat(Contexts))
             {
-                log.AppendFormat("Context '{0}':",routeMap.Name).AppendLine();
+                log.AppendFormat("Context '{0}':", routeMap.Name).AppendLine();
 
                 routeMap.ResolveRoutes(m_EndpointProvider);
                 foreach (var route in routeMap)
                 {
-                    log.AppendFormat("\t{0} route '{1}':",route.Type, route.Name).AppendLine();
+                    log.AppendFormat("\t{0} route '{1}':", route.Type, route.Name).AppendLine();
                     foreach (var messageRoute in route.MessageRoutes)
                     {
                         string error;
@@ -319,9 +319,21 @@ namespace Lykke.Cqrs
                 remoteBoundedContext);
             try
             {
-                var published = routeMap.PublishMessage(m_MessagingEngine, type, message, routeType, priority, remoteBoundedContext);
+                var published = routeMap.PublishMessage(
+                    m_MessagingEngine,
+                    type,
+                    message,
+                    routeType,
+                    priority,
+                    remoteBoundedContext);
                 if (!published && routeType == RouteType.Commands)
-                    published = DefaultRouteMap.PublishMessage(m_MessagingEngine, type, message, routeType, priority, remoteBoundedContext);
+                    published = DefaultRouteMap.PublishMessage(
+                        m_MessagingEngine,
+                        type,
+                        message,
+                        routeType,
+                        priority,
+                        remoteBoundedContext);
                 return published;
             }
             catch (Exception e)
