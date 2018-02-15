@@ -188,8 +188,8 @@ namespace Lykke.Cqrs
             var telemtryOperation = TelemetryHelper.InitTelemetryOperation(
                 "Cqrs handle command",
                 commandType,
-                route,
-                commandOriginEndpoint.ToString());
+                m_BoundedContext,
+                commandOriginEndpoint.Destination.Subscribe);
             try
             {
                 var result = handler(command, commandOriginEndpoint, route);
