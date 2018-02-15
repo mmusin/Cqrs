@@ -38,6 +38,7 @@ namespace Lykke.Cqrs.Configuration.Routing
                     0,
                     m_BoundedContext,
                     EndpointResolver,
+                    // Set exclusive for projections - only projections can subscribe to the events besides sagas
                     typeof(TRegistration) != typeof(ISagaRegistration));
             }
         }
