@@ -1,12 +1,14 @@
-## Incptum.Cqrs ##
+## Lykke.Cqrs ##
 
-Incptum.Cqrs simplefies implementation of cqrs approuach in software developement. It takes care of 
+Based on Inceptum.Cqrs
+
+Lykke.Cqrs simplefies implementation of cqrs approuach in software developement. It takes care of 
 
 * commands and events routing
 * processing prioritization 
      
 
-Incptum.Cqrs depends on the following packages
+Lykke.Cqrs depends on the following packages
 
 * Inceptum.Messaging - transport abstraction
 * NEventStore - event sourcing
