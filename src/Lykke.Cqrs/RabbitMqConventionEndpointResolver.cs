@@ -8,13 +8,15 @@ namespace Lykke.Cqrs
 {
     public class RabbitMqConventionEndpointResolver : IEndpointResolver
     {
-        private readonly Dictionary<Tuple<string, RoutingKey>, Endpoint> m_Cache = new Dictionary<Tuple<string, RoutingKey>, Endpoint>();
-        private readonly string m_Transport;
-        private readonly string m_SerializationFormat;
-        private readonly string m_ExclusiveQueuePostfix;
-        private readonly string m_EnvironmentPrefix;
-        private readonly string m_CommandsKeyword;
-        private readonly string m_EventsKeyword;
+        private readonly Dictionary<Tuple<string, RoutingKey>, Endpoint> _cache =
+            new Dictionary<Tuple<string, RoutingKey>, Endpoint>();
+
+        private readonly string _transport;
+        private readonly string _serializationFormat;
+        private readonly string _exclusiveQueuePostfix;
+        private readonly string _environmentPrefix;
+        private readonly string _commandsKeyword;
+        private readonly string _eventsKeyword;
 
         public RabbitMqConventionEndpointResolver(
             string transport,
@@ -24,22 +26,22 @@ namespace Lykke.Cqrs
             string commandsKeyword = null,
             string eventsKeyword = null)
         {
-            m_EnvironmentPrefix = environment != null ? environment + "." : "";
-            m_ExclusiveQueuePostfix = "." + (exclusiveQueuePostfix ?? Environment.MachineName);
-            m_Transport = transport;
-            m_SerializationFormat = serializationFormat;
-            m_CommandsKeyword = commandsKeyword;
-            m_EventsKeyword = eventsKeyword;
+            _environmentPrefix = environment != null ? $"{environment}." : string.Empty;
+            _exclusiveQueuePostfix = $".{exclusiveQueuePostfix ?? "projections"}";
+            _transport = transport;
+            _serializationFormat = serializationFormat;
+            _commandsKeyword = commandsKeyword;
+            _eventsKeyword = eventsKeyword;
         }
 
-        private string CreateQueueName(string queue,bool exclusive)
+        private string CreateQueueName(string queue, bool exclusive)
         {
-            return string.Format("{0}{1}{2}", m_EnvironmentPrefix, queue, exclusive ? m_ExclusiveQueuePostfix : "");
+            return $"{_environmentPrefix}{queue}{(exclusive ? _exclusiveQueuePostfix : string.Empty)}";
         }
 
         private string CreateExchangeName(string exchange)
         {
-            return string.Format("topic://{0}{1}", m_EnvironmentPrefix, exchange);
+            return $"topic://{_environmentPrefix}{exchange}";
         }
 
         private Endpoint CreateEndpoint(string route, RoutingKey key)
@@ -52,22 +54,15 @@ namespace Lykke.Cqrs
                 {
                     Destination = new Destination
                     {
-                        Publish = CreateExchangeName(string.Format(
-                            "{0}.{1}.exchange/{2}",
-                            key.LocalContext,
-                            GetKewordByRoutType(key.RouteType),
-                            rmqRoutingKey)),
+                        Publish = CreateExchangeName(
+                            $"{key.LocalContext}.{GetKewordByRoutType(key.RouteType)}.exchange/{rmqRoutingKey}"),
                         Subscribe = CreateQueueName(
-                            string.Format(
-                                "{0}.queue.{1}.{2}",
-                                key.LocalContext,
-                                GetKewordByRoutType(key.RouteType),
-                                queueName),
+                            $"{key.LocalContext}.queue.{GetKewordByRoutType(key.RouteType)}.{queueName}",
                             key.Exclusive)
                     },
-                    SerializationFormat = m_SerializationFormat,
+                    SerializationFormat = _serializationFormat,
                     SharedDestination = true,
-                    TransportId = m_Transport
+                    TransportId = _transport
                 };
             }
 
@@ -77,16 +72,13 @@ namespace Lykke.Cqrs
                 {
                     Destination = new Destination
                     {
-                        Publish = CreateExchangeName(string.Format(
-                            "{0}.{1}.exchange/{2}",
-                            key.RemoteBoundedContext,
-                            GetKewordByRoutType(key.RouteType),
-                            rmqRoutingKey)),
+                        Publish = CreateExchangeName(
+                            $"{key.RemoteBoundedContext}.{GetKewordByRoutType(key.RouteType)}.exchange/{rmqRoutingKey}"),
                         Subscribe = null
                     },
-                    SerializationFormat = m_SerializationFormat,
+                    SerializationFormat = _serializationFormat,
                     SharedDestination = true,
-                    TransportId = m_Transport
+                    TransportId = _transport
                 };
             }
 
@@ -96,22 +88,15 @@ namespace Lykke.Cqrs
                 {
                     Destination = new Destination
                     {
-                        Publish = CreateExchangeName(string.Format(
-                            "{0}.{1}.exchange/{2}",
-                            key.RemoteBoundedContext,
-                            GetKewordByRoutType(key.RouteType),
-                            key.MessageType.Name)),
+                        Publish = CreateExchangeName(
+                            $"{key.RemoteBoundedContext}.{GetKewordByRoutType(key.RouteType)}.exchange/{key.MessageType.Name}"),
                         Subscribe = CreateQueueName(
-                            string.Format(
-                                "{0}.queue.{1}.{2}.{3}",
-                                key.LocalContext,
-                                key.RemoteBoundedContext,
-                                GetKewordByRoutType(key.RouteType), route),
+                            $"{key.LocalContext}.queue.{key.RemoteBoundedContext}.{GetKewordByRoutType(key.RouteType)}.{route}",
                             key.Exclusive)
                     },
-                    SerializationFormat = m_SerializationFormat,
+                    SerializationFormat = _serializationFormat,
                     SharedDestination = true,
-                    TransportId = m_Transport
+                    TransportId = _transport
                 };
             }
 
@@ -121,16 +106,13 @@ namespace Lykke.Cqrs
                 {
                     Destination = new Destination
                     {
-                        Publish = CreateExchangeName(string.Format(
-                            "{0}.{1}.exchange/{2}",
-                            key.LocalContext,
-                            GetKewordByRoutType(key.RouteType),
-                            key.MessageType.Name)),
+                        Publish = CreateExchangeName(
+                            $"{key.LocalContext}.{GetKewordByRoutType(key.RouteType)}.exchange/{key.MessageType.Name}"),
                         Subscribe = null
                     },
-                    SerializationFormat = m_SerializationFormat,
+                    SerializationFormat = _serializationFormat,
                     SharedDestination = true,
-                    TransportId = m_Transport
+                    TransportId = _transport
                 };
             }
             return default(Endpoint);
@@ -142,32 +124,31 @@ namespace Lykke.Cqrs
             switch (routeType)
             {
                 case RouteType.Commands:
-                    keyword=m_CommandsKeyword;
+                    keyword = _commandsKeyword;
                     break;
                 case RouteType.Events:
-                    keyword=m_EventsKeyword;
-                break;
+                    keyword = _eventsKeyword;
+                    break;
             }
-            return keyword??(routeType.ToString().ToLower());
+            return keyword ?? routeType.ToString().ToLower();
         }
 
         public Endpoint Resolve(string route, RoutingKey key, IEndpointProvider endpointProvider)
         {
-            lock (m_Cache)
+            lock (_cache)
             {
-                Endpoint ep;
-                if (m_Cache.TryGetValue(Tuple.Create(route,key), out ep))
+                if (_cache.TryGetValue(Tuple.Create(route, key), out var ep))
                     return ep;
 
                 if (endpointProvider.Contains(route))
                 {
                     ep = endpointProvider.Get(route);
-                    m_Cache.Add(Tuple.Create(route, key), ep);
+                    _cache.Add(Tuple.Create(route, key), ep);
                     return ep;
                 }
 
-                ep = CreateEndpoint(route,key);
-                m_Cache.Add(Tuple.Create(route, key), ep);
+                ep = CreateEndpoint(route, key);
+                _cache.Add(Tuple.Create(route, key), ep);
                 return ep;
             }
         }
