@@ -27,7 +27,7 @@ namespace Lykke.Cqrs
             string eventsKeyword = null)
         {
             _environmentPrefix = environment != null ? $"{environment}." : string.Empty;
-            _exclusiveQueuePostfix = $".{exclusiveQueuePostfix ?? Environment.MachineName}";
+            _exclusiveQueuePostfix = $".{exclusiveQueuePostfix ?? "projections"}";
             _transport = transport;
             _serializationFormat = serializationFormat;
             _commandsKeyword = commandsKeyword;
