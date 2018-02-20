@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Inceptum.Messaging.Configuration;
-using Inceptum.Messaging.Contract;
+using Lykke.Messaging.Configuration;
+using Lykke.Messaging.Contract;
 using Lykke.Cqrs.Routing;
 
 namespace Lykke.Cqrs

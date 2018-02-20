@@ -1,4 +1,4 @@
-﻿using Inceptum.Messaging.Contract;
+﻿using Lykke.Messaging.Contract;
 
 namespace Lykke.Cqrs.InfrastructureCommands
 {

@@ -4,9 +4,10 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using Common.Log;
-using Inceptum.Messaging.Configuration;
-using Inceptum.Messaging.Contract;
+using Lykke.Messaging.Configuration;
+using Lykke.Messaging.Contract;
 using Lykke.Cqrs.Configuration;
 using Lykke.Cqrs.Utils;
 
@@ -98,7 +99,7 @@ namespace Lykke.Cqrs
                 registration.Process(this);
             }
 
-            EnsureEndpoints();
+            EnsureEndpointsAsync().GetAwaiter().GetResult();
 
             foreach (var boundedContext in Contexts)
             {
@@ -169,12 +170,11 @@ namespace Lykke.Cqrs
             }
         }
 
-        private void EnsureEndpoints()
+        private async Task EnsureEndpointsAsync()
         {
             var allEndpointsAreValid = true;
             var errorMessage = new StringBuilder("Some endpoints are not valid:").AppendLine();
-            var log = new StringBuilder();
-            log.Append("Endpoints verification").AppendLine();
+            await Log.WriteInfoAsync(nameof(CqrsEngine), nameof(EnsureEndpointsAsync), "Endpoints verification");
 
             foreach (var context in new []{DefaultRouteMap}.Concat(Contexts))
             {
@@ -186,12 +186,12 @@ namespace Lykke.Cqrs
 
             foreach (var routeMap in (new[] { DefaultRouteMap }).Concat(Contexts))
             {
-                log.AppendFormat("Context '{0}':", routeMap.Name).AppendLine();
+                await Log.WriteInfoAsync(nameof(CqrsEngine), nameof(EnsureEndpointsAsync), $"Context '{routeMap.Name}':");
 
                 routeMap.ResolveRoutes(m_EndpointProvider);
                 foreach (var route in routeMap)
                 {
-                    log.AppendFormat("\t{0} route '{1}':", route.Type, route.Name).AppendLine();
+                    await Log.WriteInfoAsync(nameof(CqrsEngine), nameof(EnsureEndpointsAsync), $"\t{route.Type} route '{route.Name}':");
                     foreach (var messageRoute in route.MessageRoutes)
                     {
                         string error;
@@ -216,12 +216,10 @@ namespace Lykke.Cqrs
                                 result = false;
                             }
 
-                            log.AppendFormat(
-                                    "\t\tPublishing  '{0}' to {1}\t{2}",
-                                    routingKey.MessageType.Name,
-                                    endpoint,
-                                    result ? "OK" : "ERROR:" + error)
-                                .AppendLine();
+                            await Log.WriteInfoAsync(
+                                nameof(CqrsEngine),
+                                nameof(EnsureEndpointsAsync),
+                                $"\t\tPublishing  '{routingKey.MessageType.Name}' to {endpoint}\t{(result ? "OK" : "ERROR:" + error)}");
                         }
 
                         if (routingKey.CommunicationType == CommunicationType.Subscribe)
@@ -241,12 +239,10 @@ namespace Lykke.Cqrs
                                 result = false;
                             }
 
-                            log.AppendFormat(
-                                    "\t\tSubscribing '{0}' on {1}\t{2}",
-                                    routingKey.MessageType.Name,
-                                    endpoint,
-                                    result ? "OK" : "ERROR:" + error)
-                                .AppendLine();
+                            await Log.WriteInfoAsync(
+                                nameof(CqrsEngine),
+                                nameof(EnsureEndpointsAsync),
+                                $"\t\tSubscribing '{routingKey.MessageType.Name}' on {endpoint}\t{(result ? "OK" : "ERROR:" + error)}");
                         }
                         allEndpointsAreValid = allEndpointsAreValid && result;
                     }

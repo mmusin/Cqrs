@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Common.Log;
-using Inceptum.Messaging;
-using Inceptum.Messaging.Configuration;
-using Inceptum.Messaging.Contract;
-using Inceptum.Messaging.RabbitMq;
-using Lykke.Cqrs;
 using Lykke.Messaging;
+using Lykke.Messaging.Configuration;
+using Lykke.Messaging.Contract;
+using Lykke.Messaging.RabbitMq;
+using Lykke.Cqrs;
 using Lykke.Cqrs.Configuration;
 using Moq;
 using NUnit.Framework;
 
-namespace Inceptum.Cqrs.Tests
+namespace Lykke.Cqrs.Tests
 {
     class CommandHandler
     {

@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using NUnit.Framework;
 
-namespace Inceptum.Cqrs.Tests
+namespace Lykke.Cqrs.Tests
 {
     [TestFixture]
     public class InvestigationTests

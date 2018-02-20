@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Inceptum.Messaging.Contract;
+using Lykke.Messaging.Contract;
 using Common.Log;
 using Lykke.Cqrs.Utils;
 
