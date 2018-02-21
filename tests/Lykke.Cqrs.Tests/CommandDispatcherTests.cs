@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using Common.Log;
-using Inceptum.Messaging.Contract;
+using Lykke.Messaging.Contract;
 using Lykke.Cqrs;
 using NUnit.Framework;
 
-namespace Inceptum.Cqrs.Tests
+namespace Lykke.Cqrs.Tests
 {
     [TestFixture]
     public class CommandDispatcherTests

@@ -1,6 +1,6 @@
 ﻿using System;
-using Inceptum.Messaging.Configuration;
-using Inceptum.Messaging.Contract;
+using Lykke.Messaging.Configuration;
+using Lykke.Messaging.Contract;
 
 namespace Lykke.Cqrs
 {

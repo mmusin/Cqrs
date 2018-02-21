@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Log;
-using Inceptum.Messaging.Contract;
+using Lykke.Messaging.Contract;
 using ThreadState = System.Threading.ThreadState;
 
 namespace Lykke.Cqrs

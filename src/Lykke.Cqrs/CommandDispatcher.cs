@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using Inceptum.Messaging.Contract;
+using Lykke.Messaging.Contract;
 using Lykke.Cqrs.InfrastructureCommands;
 using Lykke.Cqrs.Utils;
 

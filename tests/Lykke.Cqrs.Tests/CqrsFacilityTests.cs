@@ -8,10 +8,10 @@ using Castle.MicroKernel.Handlers;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using Lykke.Cqrs.Castle;
-using Inceptum.Messaging;
-using Inceptum.Messaging.Configuration;
-using Inceptum.Messaging.Contract;
-using Inceptum.Messaging.RabbitMq;
+using Lykke.Messaging;
+using Lykke.Messaging.Configuration;
+using Lykke.Messaging.Contract;
+using Lykke.Messaging.RabbitMq;
 using Lykke.Cqrs;
 using Lykke.Cqrs.Configuration;
 using Lykke.Cqrs.InfrastructureCommands;
@@ -20,7 +20,7 @@ using Moq;
 using NUnit.Framework;
 using ProtoBuf;
 
-namespace Inceptum.Cqrs.Tests
+namespace Lykke.Cqrs.Tests
 {
     internal class CommandsHandler
     {
@@ -275,7 +275,7 @@ namespace Inceptum.Cqrs.Tests
                     exception = e;
                 }
                 Assert.That(exception, Is.Not.Null, "Component with ICommandSender dependency is resolvable before cqrs engine is bootstrapped");
-                Assert.That(exception.Message.Contains("Service 'Inceptum.Cqrs.ICommandSender' which was not registered"), Is.True, "Component with ICommandSender dependency is resolvable before cqrs engine is bootstrapped");
+                Assert.That(exception.Message.Contains("Service 'Lykke.Cqrs.ICommandSender' which was not registered"), Is.True, "Component with ICommandSender dependency is resolvable before cqrs engine is bootstrapped");
                 bootstrapper.Start();
                 var component = container.Resolve<CommandSenderDependentComponent>();
                 component.CommandSender.SendCommand("test", "bc");

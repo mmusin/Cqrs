@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Inceptum.Messaging;
-using Inceptum.Messaging.Configuration;
-using Inceptum.Messaging.Contract;
+using Lykke.Messaging;
+using Lykke.Messaging.Configuration;
+using Lykke.Messaging.Contract;
 
 namespace Lykke.Cqrs.Routing
 {

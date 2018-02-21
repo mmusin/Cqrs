@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Inceptum.Cqrs.Utils
+namespace Lykke.Cqrs.Utils
 {
     /// <summary>Provides a task scheduler that runs tasks on the current thread.</summary>
     public sealed class CurrentThreadTaskScheduler : TaskScheduler

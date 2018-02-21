@@ -14,7 +14,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Inceptum.Cqrs.Utils
+namespace Lykke.Cqrs.Utils
 {
     /// <summary>
     /// Provides a TaskScheduler that provides control over priorities, fairness, and the underlying threads utilized.
