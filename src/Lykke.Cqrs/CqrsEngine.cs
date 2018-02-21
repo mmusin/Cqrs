@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
 using Common.Log;
 using Lykke.Messaging.Configuration;
 using Lykke.Messaging.Contract;
@@ -99,7 +98,7 @@ namespace Lykke.Cqrs
                 registration.Process(this);
             }
 
-            EnsureEndpointsAsync().GetAwaiter().GetResult();
+            EnsureEndpoints();
 
             foreach (var boundedContext in Contexts)
             {
@@ -170,11 +169,11 @@ namespace Lykke.Cqrs
             }
         }
 
-        private async Task EnsureEndpointsAsync()
+        private void EnsureEndpoints()
         {
             var allEndpointsAreValid = true;
             var errorMessage = new StringBuilder("Some endpoints are not valid:").AppendLine();
-            await Log.WriteInfoAsync(nameof(CqrsEngine), nameof(EnsureEndpointsAsync), "Endpoints verification");
+            Log.WriteInfo(nameof(CqrsEngine), nameof(EnsureEndpoints), "Endpoints verification");
 
             foreach (var context in new []{DefaultRouteMap}.Concat(Contexts))
             {
@@ -186,12 +185,12 @@ namespace Lykke.Cqrs
 
             foreach (var routeMap in (new[] { DefaultRouteMap }).Concat(Contexts))
             {
-                await Log.WriteInfoAsync(nameof(CqrsEngine), nameof(EnsureEndpointsAsync), $"Context '{routeMap.Name}':");
+                Log.WriteInfo(nameof(CqrsEngine), nameof(EnsureEndpoints), $"Context '{routeMap.Name}':");
 
                 routeMap.ResolveRoutes(m_EndpointProvider);
                 foreach (var route in routeMap)
                 {
-                    await Log.WriteInfoAsync(nameof(CqrsEngine), nameof(EnsureEndpointsAsync), $"\t{route.Type} route '{route.Name}':");
+                    Log.WriteInfo(nameof(CqrsEngine), nameof(EnsureEndpoints), $"\t{route.Type} route '{route.Name}':");
                     foreach (var messageRoute in route.MessageRoutes)
                     {
                         string error;
@@ -216,9 +215,9 @@ namespace Lykke.Cqrs
                                 result = false;
                             }
 
-                            await Log.WriteInfoAsync(
+                            Log.WriteInfo(
                                 nameof(CqrsEngine),
-                                nameof(EnsureEndpointsAsync),
+                                nameof(EnsureEndpoints),
                                 $"\t\tPublishing  '{routingKey.MessageType.Name}' to {endpoint}\t{(result ? "OK" : "ERROR:" + error)}");
                         }
 
@@ -239,9 +238,9 @@ namespace Lykke.Cqrs
                                 result = false;
                             }
 
-                            await Log.WriteInfoAsync(
+                            Log.WriteInfo(
                                 nameof(CqrsEngine),
-                                nameof(EnsureEndpointsAsync),
+                                nameof(EnsureEndpoints),
                                 $"\t\tSubscribing '{routingKey.MessageType.Name}' on {endpoint}\t{(result ? "OK" : "ERROR:" + error)}");
                         }
                         allEndpointsAreValid = allEndpointsAreValid && result;
